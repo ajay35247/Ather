@@ -66,7 +66,11 @@ spec:
               app: feed
       containers:
         - name: feed
-          image: ghcr.io/ajay35247/ather-feed:latest # overridden by CD
+          # Pinned placeholder — the deploy workflow rewrites this to
+          # `<sha7>-<env>` (see .github/workflows/deploy-feed.yml). Never
+          # use `:latest` in production: image pulls become non-deterministic
+          # and a rollback can't reach a known-good digest.
+          image: ghcr.io/ajay35247/ather-feed:0.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4005

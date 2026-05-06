@@ -136,6 +136,10 @@ CREATE INDEX IF NOT EXISTS posts_tags_gin
   ON content.posts USING GIN (tags);
 
 -- pgvector embedding (768d, e5-multilingual-large) — only when extension is installed.
+-- NOTE on `lists`: pgvector recommends ~ rows/1000. Start at 200 (good
+-- for ≤200k rows); a maintenance task should `REINDEX` and bump the
+-- value as the corpus grows, e.g. lists=4000 at ~4M rows. Tracked in
+-- docs/feed-pillar.md §4.1.
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
