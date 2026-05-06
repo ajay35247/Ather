@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Sidebar from '@/components/navigation/Sidebar';
 import MobileNav from '@/components/navigation/MobileNav';
-import { Radio, Users, Heart, MessageCircle, Loader2 } from 'lucide-react';
+import { Radio, Users, Heart, MessageCircle } from 'lucide-react';
 
 // Demo live streams for UI showcase
 const DEMO_STREAMS = [

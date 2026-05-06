@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Image, Film, FileText, X, Loader2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';

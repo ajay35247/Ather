@@ -99,7 +99,7 @@ export default function MessagesPage() {
           ) : (
             <ul className="overflow-y-auto flex-1">
               {conversations.map((convo) => {
-                const other = convo.participants.find((p) => true); // simplified
+                const other = convo.participants[0]; // simplified
                 return (
                   <li key={convo.id}>
                     <button
