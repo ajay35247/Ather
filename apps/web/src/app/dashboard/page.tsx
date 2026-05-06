@@ -35,7 +35,15 @@ import MobileNav from '@/components/navigation/MobileNav';
 // Demo data — wire to /api/dashboard once backend route exists.
 // ─────────────────────────────────────────────────────────────────────────
 
-const KPIS = [
+type Kpi = {
+  label: string;
+  delta: string;
+  trend: 'up' | 'down';
+  icon: typeof IndianRupee;
+  accent: string;
+} & ({ valuePaise: number } | { value: string });
+
+const KPIS: Kpi[] = [
   {
     label: 'Earnings (this month)',
     valuePaise: 1_24_750_00,
@@ -230,9 +238,7 @@ export default function DashboardPage() {
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {KPIS.map((kpi, i) => {
             const Icon = kpi.icon;
-            const value = 'valuePaise' in kpi && kpi.valuePaise != null
-              ? formatINR(kpi.valuePaise)
-              : (kpi as { value: string }).value;
+            const value = 'valuePaise' in kpi ? formatINR(kpi.valuePaise) : kpi.value;
             return (
               <div
                 key={kpi.label}
