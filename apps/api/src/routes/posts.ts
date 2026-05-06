@@ -50,10 +50,11 @@ router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunct
   }
 
   // Reject `javascript:`, `data:`, internal-network, and userinfo-bearing URLs
-  // before they ever reach the feed renderer (XSS/SSRF defense).
+  // before they ever reach the feed renderer (XSS/SSRF defense). Default
+  // `maxItems` (10) is enforced by the helper.
   let safeMediaUrls: string[];
   try {
-    safeMediaUrls = validateMediaUrls(mediaUrls, { maxItems: 10 });
+    safeMediaUrls = validateMediaUrls(mediaUrls);
   } catch (e: any) {
     return next(createError(e?.message || 'Invalid mediaUrls', 400));
   }
