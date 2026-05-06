@@ -52,6 +52,71 @@ main {
   padding: 3.5rem 1.5rem 5rem;
 }
 
+/* Logical-property variants so RTL flips automatically. */
+[dir='rtl'] main {
+  text-align: right;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.lang-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+}
+
+.lang-picker__icon {
+  font-size: 0.95rem;
+}
+
+.lang-picker__label {
+  white-space: nowrap;
+}
+
+.lang-picker select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  font: inherit;
+  font-weight: 600;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+  max-width: 14rem;
+}
+
+.lang-picker select:focus-visible {
+  outline: 2px solid var(--saffron);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.lang-picker select option,
+.lang-picker select optgroup {
+  background: #14141c;
+  color: var(--fg);
+}
+
+.lang-count {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 /* Tricolour bar — top-of-page accent. */
 .tricolour {
   display: flex;
