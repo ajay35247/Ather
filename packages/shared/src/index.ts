@@ -21,6 +21,8 @@ export interface PublicUser {
   avatarUrl?: string;
   personaType: PersonaType;
   createdAt: ISODateString;
+}
+
 // ─── User & Identity ─────────────────────────────────────────────────────────
 
 export interface User {
@@ -97,8 +99,6 @@ export const HANDLE_REGEX = /^[a-z0-9_]{3,24}$/;
 
 /** Minimum password length (server may enforce more). */
 export const MIN_PASSWORD_LENGTH = 12;
-  refreshToken: string;
-}
 
 export interface LoginPayload {
   email: string;

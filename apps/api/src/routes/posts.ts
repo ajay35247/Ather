@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { authenticate, optionalAuth, AuthRequest } from '../middleware/auth';
 import { users } from './auth';
 import { createError } from '../middleware/errorHandler';
+import { validateMediaUrls } from '../middleware/urlValidator';
+import { createNotification } from './notifications';
 
 const router = Router();
 
@@ -44,8 +46,18 @@ router.get('/', optionalAuth, (req: AuthRequest, res: Response) => {
 // POST /api/posts
 router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunction) => {
   const { content, type = 'text', mediaUrls = [], tags = [], visibility = 'public' } = req.body;
-  if (!content && mediaUrls.length === 0) {
+  if (!content && (!Array.isArray(mediaUrls) || mediaUrls.length === 0)) {
     return next(createError('Post must have content or media', 400));
+  }
+
+  // Reject `javascript:`, `data:`, internal-network, and userinfo-bearing URLs
+  // before they ever reach the feed renderer (XSS/SSRF defense). Default
+  // `maxItems` (10) is enforced by the helper.
+  let safeMediaUrls: string[];
+  try {
+    safeMediaUrls = validateMediaUrls(mediaUrls);
+  } catch (e: any) {
+    return next(createError(e?.message || 'Invalid mediaUrls', 400));
   }
 
   const author = users[req.userId!];
@@ -58,7 +70,7 @@ router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunct
     authorId: req.userId!,
     type,
     content: content || '',
-    mediaUrls,
+    mediaUrls: safeMediaUrls,
     tags,
     visibility,
     likesCount: 0,
@@ -104,6 +116,10 @@ router.post('/:id/like', authenticate, (req: AuthRequest, res: Response, next: N
 
   likedPosts[post.id].add(req.userId!);
   post.likesCount += 1;
+  // Fire-and-forget notification to the post author. Self-likes are silent.
+  if (post.authorId && post.authorId !== req.userId) {
+    createNotification(post.authorId, 'post.like', req.userId!, 'liked your post', post.id);
+  }
   res.json({ success: true, data: { likesCount: post.likesCount } });
 });
 
@@ -140,6 +156,16 @@ router.post(
 
     post.comments.push(comment);
     post.commentsCount += 1;
+    // Notify the post author of new comment (silent on self-comment).
+    if (post.authorId && post.authorId !== req.userId) {
+      createNotification(
+        post.authorId,
+        'post.comment',
+        req.userId!,
+        'commented on your post',
+        post.id,
+      );
+    }
     res.status(201).json({ success: true, data: comment });
   },
 );

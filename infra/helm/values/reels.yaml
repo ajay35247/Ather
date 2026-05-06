@@ -1,0 +1,12 @@
+# Auto-aligned with services/reels/src/index.ts (port 4020).
+# Deploy with: helm upgrade --install reels infra/helm/_service \
+#                -f infra/helm/values/reels.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: content
+  port: 80
+  targetPort: 4020
+
+image:
+  repository: ghcr.io/ajay35247/ather-reels

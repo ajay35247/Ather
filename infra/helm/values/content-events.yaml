@@ -1,0 +1,15 @@
+# Auto-aligned with services/content-events/src/index.ts (port 4027).
+# Deploy with: helm upgrade --install content-events infra/helm/_service \
+#                -f infra/helm/values/content-events.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: platform
+  port: 80
+  targetPort: 4027
+
+image:
+  repository: ghcr.io/ajay35247/ather-content-events
+
+internalSecret:
+  enabled: true

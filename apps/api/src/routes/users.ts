@@ -2,6 +2,7 @@ import { Router, Response, NextFunction } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { users } from './auth';
 import { createError } from '../middleware/errorHandler';
+import { createNotification } from './notifications';
 
 const router = Router();
 
@@ -38,6 +39,9 @@ router.post('/:id/follow', authenticate, (req: AuthRequest, res: Response, next:
   target.followersCount = (target.followersCount || 0) + 1;
   const me = users[req.userId!];
   if (me) me.followingCount = (me.followingCount || 0) + 1;
+
+  // Notify the followee. Self-follow is rejected above so this is always cross-user.
+  createNotification(target.id, 'user.follow', req.userId!, 'started following you', target.id);
 
   res.json({ success: true, message: 'Followed successfully' });
 });

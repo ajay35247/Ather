@@ -1,0 +1,15 @@
+# Auto-aligned with services/plugin-marketplace/src/index.ts (port 4051).
+# Deploy with: helm upgrade --install plugin-marketplace infra/helm/_service \
+#                -f infra/helm/values/plugin-marketplace.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: platform
+  port: 80
+  targetPort: 4051
+
+image:
+  repository: ghcr.io/ajay35247/ather-plugin-marketplace
+
+internalSecret:
+  enabled: true

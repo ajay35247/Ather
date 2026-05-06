@@ -1,0 +1,12 @@
+# Auto-aligned with services/agent-orchestrator/src/index.ts (port 4055).
+# Deploy with: helm upgrade --install agent-orchestrator infra/helm/_service \
+#                -f infra/helm/values/agent-orchestrator.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: ml
+  port: 80
+  targetPort: 4055
+
+image:
+  repository: ghcr.io/ajay35247/ather-agent-orchestrator

@@ -1,0 +1,109 @@
+name: deploy-feed
+
+# Manual + branch-gated deploy of the Feed service.
+# Builds the Docker image, pushes to GHCR, and (in cloud envs) renders
+# the Helm chart against the target cluster. The actual `helm upgrade`
+# step is gated behind a `KUBE_CONFIG_DATA` secret; without it the job
+# stops after building+pushing so this file is safe to ship without
+# any cluster access configured.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [stage, prod]
+        default: stage
+  push:
+    branches: [main]
+    paths:
+      - 'services/feed/**'
+      - 'packages/service-kit/**'
+      - 'packages/shared/**'
+      - 'infra/helm/feed/**'
+      - 'infra/k8s/feed-service.yaml'
+      - '.github/workflows/deploy-feed.yml'
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: deploy-feed-${{ github.event.inputs.environment || 'stage' }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/ather-feed
+  ENVIRONMENT: ${{ github.event.inputs.environment || 'stage' }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          SHORT="$(echo "${{ github.sha }}" | cut -c1-7)"
+          echo "tag=${SHORT}-${ENVIRONMENT}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push (multi-arch)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/feed/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE }}:${{ env.ENVIRONMENT }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  helm-deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    # Only attempt to deploy when a kubeconfig has been configured.
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    environment: ${{ github.event.inputs.environment || 'stage' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Install helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: Helm upgrade --install
+        run: |
+          helm upgrade --install feed ./infra/helm/feed \
+            --namespace ather --create-namespace \
+            --set image.repository=${{ env.IMAGE }} \
+            --set image.tag=${{ needs.build-and-push.outputs.image_tag }} \
+            --values ./infra/helm/feed/values.yaml \
+            --atomic --timeout 5m
+
+      - name: Smoke test
+        run: |
+          kubectl -n ather rollout status deploy/feed --timeout=180s
+          kubectl -n ather get pods -l app=feed

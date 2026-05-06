@@ -1,0 +1,12 @@
+# Auto-aligned with services/ranking/src/index.ts (port 4025).
+# Deploy with: helm upgrade --install ranking infra/helm/_service \
+#                -f infra/helm/values/ranking.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: ml
+  port: 80
+  targetPort: 4025
+
+image:
+  repository: ghcr.io/ajay35247/ather-ranking

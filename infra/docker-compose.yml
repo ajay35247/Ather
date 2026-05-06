@@ -1,5 +1,16 @@
 version: "3.9"
 
+# Local development infrastructure for Ather.
+#
+# Use profiles to keep the default `up` lightweight:
+#   docker compose up                 # core only (postgres, redis)
+#   docker compose --profile streaming up        # + Redpanda (Kafka)
+#   docker compose --profile search up           # + OpenSearch
+#   docker compose --profile vectors up          # + Qdrant
+#   docker compose --profile storage up          # + MinIO (S3-compatible)
+#   docker compose --profile observability up    # + Prometheus + Grafana + OTel collector
+#   docker compose --profile all up              # everything
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -13,6 +24,8 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      # Migrations are applied in lexicographic order on first boot.
+      - ./postgres/migrations:/docker-entrypoint-initdb.d/migrations:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ather -d ather"]
       interval: 5s
@@ -30,5 +43,154 @@ services:
       timeout: 3s
       retries: 10
 
+  # ===================================================================
+  # Streaming — Redpanda is a Kafka-API-compatible broker that runs as
+  # a single binary, ideal for laptop dev. Production uses MSK (AWS).
+  # ===================================================================
+  redpanda:
+    image: redpandadata/redpanda:v24.2.7
+    container_name: ather-redpanda
+    profiles: [streaming, all]
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --check=false
+      - --node-id=0
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://redpanda:9092
+    ports:
+      - "9092:9092"   # Kafka
+      - "9644:9644"   # Admin
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ===================================================================
+  # Search — OpenSearch single-node, security disabled for local dev.
+  # Production uses managed OpenSearch (AWS) or Elasticsearch.
+  # ===================================================================
+  opensearch:
+    image: opensearchproject/opensearch:2.16.0
+    container_name: ather-opensearch
+    profiles: [search, all]
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+      nofile:  { soft: 65536, hard: 65536 }
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ===================================================================
+  # Vector store — Qdrant. Used by services/vector-search +
+  # services/recommendations. Production uses Qdrant Cloud or pgvector
+  # (also supported via the guarded column in 0001_feed_pillar.sql).
+  # ===================================================================
+  qdrant:
+    image: qdrant/qdrant:v1.11.5
+    container_name: ather-qdrant
+    profiles: [vectors, all]
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "test -d /qdrant/storage"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ===================================================================
+  # Object storage — MinIO is S3-API compatible. Used for media,
+  # ledger backups, search snapshots in dev. Production uses real S3.
+  # ===================================================================
+  minio:
+    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    container_name: ather-minio
+    profiles: [storage, all]
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ather
+      MINIO_ROOT_PASSWORD: atherather
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # ===================================================================
+  # Observability — OTel collector receives OTLP from services and fans
+  # out to Prometheus (metrics) and stdout (traces, dev only). Grafana
+  # ships with a pre-loaded Prometheus datasource.
+  # ===================================================================
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.108.0
+    container_name: ather-otel
+    profiles: [observability, all]
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./observability/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8889:8889"   # Prometheus exporter
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: ather-prometheus
+    profiles: [observability, all]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=24h
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    container_name: ather-grafana
+    profiles: [observability, all]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_SECURITY_ADMIN_PASSWORD: ather
+    volumes:
+      - ./observability/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+
 volumes:
   postgres-data:
+  opensearch-data:
+  qdrant-data:
+  minio-data:
+  grafana-data:

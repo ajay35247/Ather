@@ -1,0 +1,12 @@
+# Auto-aligned with services/analytics/src/index.ts (port 4038).
+# Deploy with: helm upgrade --install analytics infra/helm/_service \
+#                -f infra/helm/values/analytics.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: platform
+  port: 80
+  targetPort: 4038
+
+image:
+  repository: ghcr.io/ajay35247/ather-analytics
