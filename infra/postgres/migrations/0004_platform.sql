@@ -182,7 +182,7 @@ CREATE INDEX IF NOT EXISTS kg_edges_to_rel_idx   ON kg.edges(to_id, rel);
 -- =====================================================================
 CREATE TABLE IF NOT EXISTS search.documents (
   id            TEXT         PRIMARY KEY,                      -- "post:<uuid>", "user:<uuid>"
-  kind          TEXT         NOT NULL,                         -- 'post','user','community','minia_app'
+  kind          TEXT         NOT NULL,                         -- 'post','user','community','mini_app'
   title         TEXT,
   body          TEXT,
   language      TEXT,
