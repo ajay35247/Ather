@@ -1,5 +1,29 @@
 {
   "name": "ather",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ather — Omni-Social Operating System (Phase 0 monorepo scaffold)",
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev:auth": "npm --workspace @ather/auth-service run dev",
+    "dev:profile": "npm --workspace @ather/profile-service run dev",
+    "dev:web": "npm --workspace @ather/web run dev",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "typescript": "5.4.5"
   "version": "1.0.0",
   "private": true,
   "workspaces": [
