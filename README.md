@@ -1,10 +1,12 @@
 # Ather
 
 > **Omni-Social Operating System** — a unified identity, social, communication, and creator
-> platform. This repo is the **Phase 0 monorepo scaffold** for the Core Loop MVP.
+> platform. This repo carries the **complete Phase 0–4 monorepo scaffold** for the
+> [`docs/roadmap.md`](./docs/roadmap.md) blueprint. Phase 5 is intentionally deferred per
+> [`docs/phase5-deferral.md`](./docs/phase5-deferral.md).
 
 The full design blueprint (architecture, API, schema, security, scaling, monetization, roadmap)
-lives in [`/docs`](./docs).
+lives in [`/docs`](./docs). The full per-service inventory is in [`docs/services.md`](./docs/services.md).
 
 ---
 
@@ -13,18 +15,29 @@ lives in [`/docs`](./docs).
 ```
 ather/
 ├── apps/
-│   └── web/                 # Next.js 15 App Router — Phase 1 screen shell
-├── services/
-│   ├── auth/                # Express + TS — register/login/refresh/logout/me, JWT, single-use refresh
-│   └── profile/             # Express + TS — profile read/update, by-handle lookup
+│   └── web/                 # Next.js 15 App Router — feed, auth, profile shell
 ├── packages/
-│   └── shared/              # Shared TypeScript types and API contracts
+│   ├── shared/              # Shared TS types & API contracts
+│   └── service-kit/         # Shared Express factory: app, auth, rate-limits, errors, pagination
+├── services/                # 35 backend services (Express + TS) — see docs/services.md
+│   ├── auth, profile                                                       # Phase 0
+│   ├── social-graph, post, feed, media, chat, presence,
+│   │   notification, search, moderation, ai-assistant                      # Phase 1
+│   ├── reels, stories, comments, communities, groups,
+│   │   ranking, recommendations, content-events                            # Phase 2
+│   ├── wallet, payments, subscriptions, tips, ads, creator-studio,
+│   │   live-stream, audio-rooms, analytics, ledger                         # Phase 3
+│   └── mini-app-runtime, plugin-marketplace, bot-platform,
+│       knowledge-graph, vector-search, agent-orchestrator, translation     # Phase 4
 ├── infra/
 │   ├── docker-compose.yml   # Local Postgres + Redis
 │   └── postgres/init.sql    # Per-service Postgres schemas
-├── docs/                    # Architecture, API, DB, security, scaling, monetization, roadmap
+├── docs/                    # Architecture, API, DB, security, scaling, monetization, roadmap, services
 └── .github/workflows/ci.yml # Typecheck · build · test
 ```
+
+Each service uses `@ather/service-kit` so adding a new one is ~50 lines; see
+[`docs/services.md`](./docs/services.md) for the standard layout.
 
 ---
 
