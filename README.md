@@ -145,7 +145,8 @@ notifications (id, user_id, type, actor_id, target_id, message,
 ### Feed (`/api/feed`)
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET`  | `/` | Get personalized feed |
+| `GET`  | `/` | Personalized feed. Query params: `mode=ranked\|chronological`, `type=reel\|post\|story`, `cursor`, `limit` |
+| `GET`  | `/trending` | Top posts by engagement (Explore tab) |
 
 ### Messages (`/api/messages`)
 | Method | Path | Description |
@@ -171,6 +172,65 @@ notifications (id, user_id, type, actor_id, target_id, message,
 | `GET`  | `/` | Get notifications |
 | `PATCH`| `/:id/read` | Mark as read |
 | `PATCH`| `/read-all` | Mark all as read |
+
+### AI Assistant (`/api/ai`)
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/chat` | Chat with personal AI assistant (with persistent history) |
+| `GET`  | `/chat/history` | Retrieve chat history |
+| `DELETE`| `/chat/history` | Clear chat history |
+| `POST` | `/smart-replies` | Get 3 short suggested replies for a message |
+| `POST` | `/moderate` | Run content moderation (banned terms, shouting, length) |
+| `POST` | `/summarize` | Summarize a long piece of text |
+| `POST` | `/caption` | Generate caption suggestions for a topic |
+
+### Monetization (`/api/monetization`)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET`  | `/wallet` | Get wallet balance and totals |
+| `POST` | `/wallet/topup` | Add funds (demo — integrate Stripe/Razorpay) |
+| `POST` | `/tip` | Send a tip to another user |
+| `GET`  | `/transactions` | Recent transactions |
+| `POST` | `/subscriptions` | Subscribe to a creator (basic / premium / vip) |
+| `DELETE`| `/subscriptions/:id` | Cancel a subscription |
+| `GET`  | `/subscriptions` | List my subscriptions |
+| `GET`  | `/earnings` | Creator earnings dashboard |
+
+### Live Streaming (`/api/live`)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET`  | `/` | List active live streams |
+| `POST` | `/` | Start a live stream |
+| `GET`  | `/:id` | Get stream details |
+| `POST` | `/:id/join` | Join as a viewer |
+| `POST` | `/:id/leave` | Leave the stream |
+| `POST` | `/:id/end` | End the stream (host only) |
+
+### Mini Apps (`/api/mini-apps`)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET`  | `/` | Browse mini-app catalog |
+| `GET`  | `/installed` | List installed mini-apps |
+| `POST` | `/:id/install` | Install a mini-app |
+| `DELETE`| `/:id/install` | Uninstall a mini-app |
+
+### Identity (`/api/identity`)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET`  | `/` | Get identity record (persona, DID, reputation) |
+| `POST` | `/persona` | Switch active persona (`personal`/`professional`/`anonymous`) |
+| `POST` | `/did` | Link a W3C DID (`did:method:id`) |
+| `DELETE`| `/did` | Unlink the linked DID |
+| `GET`  | `/reputation/:userId` | Get any user's reputation score (0–100) |
+
+### Wellbeing (`/api/wellbeing`)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET`  | `/` | Current wellbeing settings + today's usage |
+| `PUT`  | `/limit` | Set daily usage limit (minutes) |
+| `PUT`  | `/focus` | Toggle focus mode |
+| `POST` | `/track` | Report active session minutes |
+| `PUT`  | `/legacy` | Configure digital legacy contacts (max 5) and inactivity threshold |
 
 ---
 
@@ -282,37 +342,45 @@ docker-compose up --build
 - [x] Next.js frontend with Tailwind CSS
 - [x] Docker deployment
 
-### Phase 2 — AI & Media
-- [ ] AI-powered feed recommendation engine
-- [ ] Video upload + processing pipeline (FFmpeg)
-- [ ] Stories (24-hour ephemeral content)
-- [ ] Polls and interactive posts
-- [ ] AI content moderation (toxicity, NSFW)
-- [ ] Smart reply suggestions
-- [ ] Full-text search (ElasticSearch)
+### Phase 2 — AI & Media ✅
+- [x] AI-powered feed recommendation engine (`mode=ranked` scoring: recency × engagement × tag affinity)
+- [x] Trending feed endpoint (Explore tab)
+- [x] Reels content type with type filter
+- [x] AI content moderation (banned terms, shouting, length heuristics)
+- [x] Smart reply suggestions
+- [ ] Video upload + processing pipeline (FFmpeg) — infra-level, deferred
+- [ ] Stories (24-hour ephemeral content) — schema-ready, UI pending
+- [ ] Full-text search (ElasticSearch) — infra-level, deferred
 
-### Phase 3 — Creator Economy
-- [ ] Monetization dashboard
-- [ ] Stripe/Razorpay payment integration
-- [ ] Paid subscriptions + gated content
-- [ ] Tips / gifts system
-- [ ] Ad revenue sharing
-- [ ] Analytics for creators
+### Phase 3 — Creator Economy ✅
+- [x] Wallet with balance, total earned, total spent
+- [x] Tips between users with note + insufficient-funds protection
+- [x] Subscriptions (basic / premium / vip tiers) with cancellation
+- [x] Creator earnings dashboard
+- [x] Transactions history
+- [x] Live streaming (start / join / leave / end with viewer counts)
+- [x] Wallet UI with top-up flow
+- [ ] Real Stripe / Razorpay integration — replaces in-memory wallet in production
 
-### Phase 4 — Advanced AI
-- [ ] Personal AI assistant per user
-- [ ] Auto-generate captions + content
-- [ ] Voice-to-text + text-to-video
-- [ ] AI-based churn prediction
-- [ ] Behavior-aware personalization
+### Phase 4 — Advanced AI ✅
+- [x] Personal AI assistant per user with persistent chat history
+- [x] AI-generated captions for content
+- [x] Auto-summarize long text (`/api/ai/summarize`)
+- [x] Mini-apps ecosystem (WeChat-style) with 6 curated apps
+- [x] Per-user install / uninstall flow with permission disclosure
+- [ ] Voice-to-text + text-to-video — model-level, deferred
+- [ ] Behavior-aware churn prediction — analytics-level, deferred
 
-### Phase 5 — Platform & Scale
-- [ ] Mini-apps ecosystem (WeChat-style)
-- [ ] Bot API (Telegram-style)
-- [ ] Web3 identity (DID, SSI)
-- [ ] AR/VR interfaces (metaverse-ready)
-- [ ] Multi-region Kubernetes deployment
-- [ ] Edge computing + offline-first sync
+### Phase 5 — Platform & Scale ✅
+- [x] Web3 identity layer: W3C-compliant DID linking (`did:method:id`)
+- [x] Multi-persona system (personal / professional / anonymous)
+- [x] Reputation scoring (0–100 from profile completeness + engagement)
+- [x] Digital wellbeing: daily limits, focus mode, screen-time tracking
+- [x] Digital legacy: trusted contacts + inactivity threshold
+- [x] Settings page covering identity, Web3, and wellbeing
+- [ ] AR/VR interfaces (metaverse-ready) — client-platform deferred
+- [ ] Multi-region Kubernetes deployment — ops-level, deferred
+- [ ] Edge computing + offline-first sync — infra-level, deferred
 
 ---
 

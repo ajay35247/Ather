@@ -14,6 +14,9 @@ import {
   LogOut,
   Sparkles,
   TrendingUp,
+  Wallet,
+  Boxes,
+  Settings,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
@@ -25,8 +28,12 @@ const navItems = [
   { href: '/messages', label: 'Messages', icon: MessageCircle },
   { href: '/communities', label: 'Communities', icon: Users },
   { href: '/live', label: 'Live', icon: Radio },
+  { href: '/ai', label: 'AI Assistant', icon: Sparkles },
+  { href: '/wallet', label: 'Wallet', icon: Wallet },
+  { href: '/mini-apps', label: 'Mini Apps', icon: Boxes },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/profile', label: 'Profile', icon: User },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Sidebar() {
