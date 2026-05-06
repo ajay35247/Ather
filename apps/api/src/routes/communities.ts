@@ -6,8 +6,10 @@ import { createError } from '../middleware/errorHandler';
 
 const router = Router();
 
-const communities: Record<string, any> = {};
-const memberships: Record<string, Set<string>> = {}; // communityId -> Set<userId>
+// In-memory community store (replace with DB in production)
+// Object.create(null) prevents prototype pollution via __proto__ keys
+const communities: Record<string, any> = Object.create(null);
+const memberships: Record<string, Set<string>> = Object.create(null); // communityId -> Set<userId>
 
 // Seed a default community
 const defaultId = 'community-general';
@@ -38,9 +40,13 @@ router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunct
   const { name, description, category = 'General', isPrivate = false } = req.body;
   if (!name?.trim()) return next(createError('Community name is required', 400));
 
-  const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  const existing = Object.values(communities).find((c: any) => c.slug === slug);
-  if (existing) return next(createError('Community with this name already exists', 409));
+  const slug = name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/^-+|-+$/g, '')  // trim leading/trailing hyphens
+    .replace(/-{2,}/g, '-');   // collapse consecutive hyphens
+  if (!slug) return next(createError('Community name must contain alphanumeric characters', 400));
 
   const id = uuidv4();
   communities[id] = {

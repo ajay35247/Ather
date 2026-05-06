@@ -14,6 +14,7 @@ import communitiesRouter from './routes/communities';
 import notificationsRouter from './routes/notifications';
 import feedRouter from './routes/feed';
 import { errorHandler } from './middleware/errorHandler';
+import { requireJwtSecret } from './middleware/auth';
 import { registerSocketHandlers } from './socket/handlers';
 
 dotenv.config();

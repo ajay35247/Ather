@@ -48,8 +48,29 @@ export default function CreatePostBox({ onPost }: CreatePostBoxProps) {
 
   function addMedia() {
     if (!mediaInput.trim()) return;
+    // Only allow http/https URLs to prevent javascript: XSS
+    try {
+      const parsed = new URL(mediaInput.trim());
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        toast.error('Only http and https URLs are allowed');
+        return;
+      }
+    } catch {
+      toast.error('Please enter a valid URL');
+      return;
+    }
     setMediaUrls((prev) => [...prev, mediaInput.trim()]);
     setMediaInput('');
+  }
+
+  /** Sanitize a URL at render time — returns empty string for non-http(s) schemes. */
+  function safeUrl(url: string): string {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? url : '';
+    } catch {
+      return '';
+    }
   }
 
   return (
@@ -73,7 +94,7 @@ export default function CreatePostBox({ onPost }: CreatePostBoxProps) {
               {mediaUrls.map((url, i) => (
                 <div key={i} className="relative">
                   <img
-                    src={url}
+                    src={safeUrl(url)}
                     alt=""
                     className="w-20 h-20 object-cover rounded-lg"
                     onError={(e) => {

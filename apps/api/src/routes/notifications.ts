@@ -4,7 +4,9 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-const notifications: Record<string, any[]> = {}; // userId -> notifications[]
+// In-memory notification store (replace with DB in production)
+// Object.create(null) prevents prototype pollution via __proto__ keys
+const notifications: Record<string, any[]> = Object.create(null);
 
 export function createNotification(
   userId: string,

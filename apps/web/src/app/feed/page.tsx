@@ -29,7 +29,6 @@ export default function FeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const observerRef = useRef<IntersectionObserver | null>(null);
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
   async function fetchPosts(nextCursor?: string) {
@@ -55,8 +54,9 @@ export default function FeedPage() {
 
   // Infinite scroll
   useEffect(() => {
-    if (!hasMore) return;
-    observerRef.current = new IntersectionObserver(async (entries) => {
+    if (!hasMore || !loaderRef.current) return;
+    const currentLoader = loaderRef.current;
+    const observer = new IntersectionObserver(async (entries) => {
       if (entries[0].isIntersecting && !loadingMore && hasMore) {
         setLoadingMore(true);
         const result = await fetchPosts(cursor ?? undefined);
@@ -66,8 +66,8 @@ export default function FeedPage() {
         setLoadingMore(false);
       }
     });
-    if (loaderRef.current) observerRef.current.observe(loaderRef.current);
-    return () => observerRef.current?.disconnect();
+    observer.observe(currentLoader);
+    return () => observer.disconnect();
   }, [cursor, hasMore, loadingMore]);
 
   function handleNewPost(post: Post) {

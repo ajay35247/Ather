@@ -6,8 +6,10 @@ import { createError } from '../middleware/errorHandler';
 
 const router = Router();
 
-const conversations: Record<string, any> = {};
-const messages: Record<string, any[]> = {}; // conversationId -> messages[]
+// In-memory message store (replace with DB in production)
+// Object.create(null) prevents prototype pollution via __proto__ keys
+const conversations: Record<string, any> = Object.create(null);
+const messages: Record<string, any[]> = Object.create(null); // conversationId -> messages[]
 
 // GET /api/messages/conversations
 router.get('/conversations', authenticate, (req: AuthRequest, res: Response) => {
@@ -90,6 +92,18 @@ router.post(
 
     const { content, type = 'text', mediaUrl } = req.body;
     if (!content?.trim() && !mediaUrl) return next(createError('Message cannot be empty', 400));
+
+    // Validate mediaUrl to prevent javascript: or data: URI XSS
+    if (mediaUrl) {
+      try {
+        const parsed = new URL(mediaUrl);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          return next(createError('mediaUrl must use http or https', 400));
+        }
+      } catch {
+        return next(createError('mediaUrl must be a valid URL', 400));
+      }
+    }
 
     const msg = {
       id: uuidv4(),

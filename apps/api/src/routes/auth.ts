@@ -3,17 +3,18 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { body, validationResult } from 'express-validator';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate, AuthRequest, requireJwtSecret } from '../middleware/auth';
 import { createError } from '../middleware/errorHandler';
 
 const router = Router();
 
 // In-memory store (swap with Prisma/DB in production)
-const users: Record<string, any> = {};
-const usersByEmail: Record<string, string> = {}; // email -> id
+// Object.create(null) prevents prototype pollution attacks via __proto__ keys
+const users: Record<string, any> = Object.create(null);
+const usersByEmail: Record<string, string> = Object.create(null); // email -> id
 
 function makeTokens(userId: string, email: string) {
-  const secret = process.env.JWT_SECRET || 'ather-secret-dev';
+  const secret = requireJwtSecret();
   const accessToken = jwt.sign({ userId, email }, secret, { expiresIn: '15m' });
   const refreshToken = jwt.sign({ userId, email }, secret, { expiresIn: '30d' });
   return { accessToken, refreshToken };
@@ -99,7 +100,7 @@ router.post('/refresh', (req: Request, res: Response, next: NextFunction) => {
   if (!refreshToken) return next(createError('Refresh token required', 400));
 
   try {
-    const secret = process.env.JWT_SECRET || 'ather-secret-dev';
+    const secret = requireJwtSecret();
     const payload = jwt.verify(refreshToken, secret) as { userId: string; email: string };
     const tokens = makeTokens(payload.userId, payload.email);
     res.json({ success: true, data: tokens });

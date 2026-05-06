@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import { requireJwtSecret } from '../middleware/auth';
 
 export function registerSocketHandlers(io: Server): void {
   // Middleware: authenticate socket connections
@@ -8,7 +9,7 @@ export function registerSocketHandlers(io: Server): void {
     if (!token) return next(new Error('Authentication required'));
 
     try {
-      const secret = process.env.JWT_SECRET || 'ather-secret-dev';
+      const secret = requireJwtSecret();
       const payload = jwt.verify(token, secret) as { userId: string };
       (socket as any).userId = payload.userId;
       next();

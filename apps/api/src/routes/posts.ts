@@ -6,10 +6,11 @@ import { createError } from '../middleware/errorHandler';
 
 const router = Router();
 
-// In-memory posts store
-const posts: Record<string, any> = {};
-const likedPosts: Record<string, Set<string>> = {}; // postId -> Set<userId>
-const bookmarks: Record<string, Set<string>> = {};  // userId -> Set<postId>
+// In-memory posts store (replace with DB in production)
+// Object.create(null) prevents prototype pollution via __proto__ keys
+const posts: Record<string, any> = Object.create(null);
+const likedPosts: Record<string, Set<string>> = Object.create(null); // postId -> Set<userId>
+const bookmarks: Record<string, Set<string>> = Object.create(null);  // userId -> Set<postId>
 
 // GET /api/posts (paginated)
 router.get('/', optionalAuth, (req: AuthRequest, res: Response) => {

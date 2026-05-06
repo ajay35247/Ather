@@ -114,8 +114,9 @@ export default function CommunitiesPage() {
                     </option>
                   ))}
                 </select>
-                <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <label htmlFor="community-private" className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
                   <input
+                    id="community-private"
                     type="checkbox"
                     checked={form.isPrivate}
                     onChange={(e) => setForm((f) => ({ ...f, isPrivate: e.target.checked }))}

@@ -37,7 +37,7 @@ services:
       PORT: 4000
       DATABASE_URL: postgresql://ather:ather@db:5432/ather_db
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in environment}
       CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
     ports:
       - '4000:4000'
