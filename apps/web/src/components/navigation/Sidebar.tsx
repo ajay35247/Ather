@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home,
+  LayoutDashboard,
   MessageCircle,
   Users,
   User,
@@ -23,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 
 const navItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/feed', label: 'Home', icon: Home },
   { href: '/feed?type=reel', label: 'Reels', icon: TrendingUp },
   { href: '/messages', label: 'Messages', icon: MessageCircle },
