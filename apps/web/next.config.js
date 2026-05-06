@@ -2,9 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  experimental: {
-    typedRoutes: false
-  }
+  experimental: {},
+  typedRoutes: false,
   images: {
     domains: ['api.dicebear.com', 'picsum.photos', 'images.unsplash.com'],
   },
