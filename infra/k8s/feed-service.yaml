@@ -1,0 +1,219 @@
+# =====================================================================
+# Feed Service — Kubernetes manifests
+#
+# Production-grade defaults: read-only root filesystem, dropped caps,
+# non-root user, resource requests/limits, PodDisruptionBudget,
+# HorizontalPodAutoscaler on RPS proxy (CPU at 70%), and a strict
+# NetworkPolicy that allows only ingress from the API gateway and egress
+# to Postgres / Redis / Kafka / OTel.
+#
+# Render with: kubectl apply -f infra/k8s/feed-service.yaml
+# =====================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ather
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: feed
+  namespace: ather
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feed
+  namespace: ather
+  labels:
+    app: feed
+    plane: content
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: feed
+  template:
+    metadata:
+      labels:
+        app: feed
+        plane: content
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '4005'
+        prometheus.io/path: '/metrics'
+    spec:
+      serviceAccountName: feed
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: feed
+      containers:
+        - name: feed
+          image: ghcr.io/ajay35247/ather-feed:latest # overridden by CD
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4005
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: '4005'
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: feed-secrets
+                  key: jwt-secret
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: feed-secrets
+                  key: database-url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: feed-secrets
+                  key: redis-url
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability.svc.cluster.local:4318
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          readinessProbe:
+            httpGet: { path: /health, port: 4005 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /health, port: 4005 }
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            failureThreshold: 3
+          startupProbe:
+            httpGet: { path: /health, port: 4005 }
+            failureThreshold: 30
+            periodSeconds: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ['ALL']
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feed
+  namespace: ather
+  labels: { app: feed }
+spec:
+  type: ClusterIP
+  selector: { app: feed }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4005
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: feed
+  namespace: ather
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels: { app: feed }
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: feed
+  namespace: ather
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: feed
+  minReplicas: 3
+  maxReplicas: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      stabilizationWindowSeconds: 30
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }
+    - type: Resource
+      resource:
+        name: memory
+        target: { type: Utilization, averageUtilization: 80 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: feed
+  namespace: ather
+spec:
+  podSelector:
+    matchLabels: { app: feed }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: gateway }
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: ather }
+      ports:
+        - protocol: TCP
+          port: 4005
+  egress:
+    # Postgres
+    - to: [{ podSelector: { matchLabels: { app: postgres } } }]
+      ports: [{ protocol: TCP, port: 5432 }]
+    # Redis
+    - to: [{ podSelector: { matchLabels: { app: redis } } }]
+      ports: [{ protocol: TCP, port: 6379 }]
+    # Kafka
+    - to: [{ podSelector: { matchLabels: { app: kafka } } }]
+      ports: [{ protocol: TCP, port: 9092 }]
+    # OTel collector (observability ns)
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: observability }
+      ports: [{ protocol: TCP, port: 4318 }]
+    # DNS
+    - to:
+        - namespaceSelector: {}
+          podSelector: { matchLabels: { k8s-app: kube-dns } }
+      ports:
+        - protocol: UDP
+          port: 53

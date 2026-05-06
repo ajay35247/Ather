@@ -71,4 +71,70 @@ describe('feed-service', () => {
       .send({ targetId: 'p1', reason: 'invalid' });
     expect(bad.status).toBe(400);
   });
+
+  it('ranker=v1 uses the production formula and reports it', async () => {
+    const store = new FeedStore();
+    const now = Date.now();
+    // Three posts: A spammy (no engagement), B fresh+matching interest, C old.
+    const seed = [
+      {
+        postId: 'pA',
+        authorId: 'creatorA',
+        score: 0.9, // legacy score is highest, but ranker should de-prioritize
+        reason: 'recommended',
+        ageMs: 1000
+      },
+      {
+        postId: 'pB',
+        authorId: 'creatorB',
+        score: 0.1,
+        reason: 'following',
+        ageMs: 60_000
+      },
+      {
+        postId: 'pC',
+        authorId: 'creatorC',
+        score: 0.2,
+        reason: 'recommended',
+        ageMs: 1000 * 60 * 60 * 48 // 48h old
+      }
+    ];
+    for (const s of seed) {
+      store.push({
+        id: s.postId,
+        userId: 'alice',
+        postId: s.postId,
+        authorId: s.authorId,
+        score: s.score,
+        reason: s.reason,
+        createdAt: new Date(now - s.ageMs).toISOString()
+      });
+      store.setPostSignals({
+        postId: s.postId,
+        authorId: s.authorId,
+        freshnessHalfLifeH: 24,
+        createdAt: new Date(now - s.ageMs).toISOString(),
+        metrics:
+          s.postId === 'pB'
+            ? { views: 100, likes: 80, comments: 30, shares: 20, watchTimeMs: 100 * 12_000 }
+            : { views: 100, likes: 0, comments: 0, shares: 0, watchTimeMs: 0 },
+        tags: s.postId === 'pB' ? ['ai', 'design'] : ['random'],
+        authorEngagementZ: s.postId === 'pB' ? 1.5 : 0,
+        authorGated: false
+      });
+    }
+    store.setViewerSignals({
+      userId: 'alice',
+      interests: ['ai', 'design'],
+      mutedTags: [],
+      blockedAuthorIds: []
+    });
+    const { app } = makeApp({ env: 'test', jwtSecret: SECRET, store });
+    const r = await request(app)
+      .get('/feed/home?mode=for_you&ranker=v1&limit=10')
+      .set('authorization', `Bearer ${tok('alice')}`);
+    expect(r.status).toBe(200);
+    expect(r.body.ranker).toBe('v1');
+    expect(r.body.items[0].postId).toBe('pB'); // ranker v1 surfaces interest+engagement
+  });
 });
