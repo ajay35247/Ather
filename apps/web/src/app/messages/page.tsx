@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Sidebar from '@/components/navigation/Sidebar';
 import MobileNav from '@/components/navigation/MobileNav';
 import api from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { MessageCircle, Send, Loader2, Search } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -26,6 +27,7 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -99,7 +101,11 @@ export default function MessagesPage() {
           ) : (
             <ul className="overflow-y-auto flex-1">
               {conversations.map((convo) => {
-                const other = convo.participants.find(() => true); // simplified
+                // Pick the first participant who isn't the signed-in user.
+                // Falls back to the first participant for self-only group rows.
+                const other =
+                  convo.participants.find((p) => p.id !== currentUserId) ||
+                  convo.participants[0];
                 return (
                   <li key={convo.id}>
                     <button
