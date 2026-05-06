@@ -5,13 +5,23 @@
  *
  * This implements the reader side of `feed.entries`:
  *   * `forUser(viewerId, mode, limit)` — returns up to `limit` rows.
- *   * `pushBatch(entries)` — bulk insert produced by the fanout engine.
+ *   * `pushBatch(entries)` — bulk insert produced by the fanout engine
+ *     OR by other writers (e.g. recommendations, sponsored placements).
  *   * `prune(viewerId, keep)` — keep only the newest `keep` entries.
  *
  * The schema is defined in `infra/postgres/migrations/0001_feed_pillar.sql`.
  */
 
-import type { FanoutEntry } from './fanout';
+export type FeedEntryReason = 'following' | 'recommended' | 'community' | 'sponsored';
+
+export interface FeedEntryInput {
+  viewerId: string;
+  postId: string;
+  authorId: string;
+  reason: FeedEntryReason;
+  score: number;
+  createdAt: string;
+}
 
 export interface QueryFn {
   (text: string, params?: unknown[]): Promise<{ rows: any[]; rowCount?: number }>;
@@ -63,7 +73,7 @@ export class PgFeedStore {
     return r.rows.map(rowToFeed);
   }
 
-  async pushBatch(entries: FanoutEntry[]): Promise<number> {
+  async pushBatch(entries: FeedEntryInput[]): Promise<number> {
     if (entries.length === 0) return 0;
     // Build a multi-row INSERT with parameter placeholders. Caps batch
     // size at 1000 to avoid pg parameter limit (max 65535 / 6 cols).

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: feed
+description: Ather Feed Service — TikTok-level discovery + ranking pillar.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords: [ather, feed, social, ranking]
+maintainers:
+  - name: Ather Team

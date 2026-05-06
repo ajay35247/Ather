@@ -23,17 +23,24 @@ interface Post {
   createdAt: string;
 }
 
+type FeedMode = 'ranked' | 'chronological';
+const MODE_LABELS: Record<FeedMode, string> = {
+  ranked: 'For You',
+  chronological: 'Latest'
+};
+
 export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [mode, setMode] = useState<FeedMode>('ranked');
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  async function fetchPosts(nextCursor?: string) {
+  async function fetchPosts(currentMode: FeedMode, nextCursor?: string) {
     try {
-      const params: Record<string, string> = { limit: '20' };
+      const params: Record<string, string> = { limit: '20', mode: currentMode };
       if (nextCursor) params.cursor = nextCursor;
       const { data } = await api.get('/api/feed', { params });
       return data;
@@ -42,15 +49,24 @@ export default function FeedPage() {
     }
   }
 
+  // Reload whenever the mode changes (or on mount).
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    fetchPosts().then((result) => {
+    setPosts([]);
+    setCursor(null);
+    setHasMore(true);
+    fetchPosts(mode).then((result) => {
+      if (cancelled) return;
       setPosts(result.data || []);
       setCursor(result.nextCursor);
       setHasMore(result.hasMore);
       setLoading(false);
     });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
 
   // Infinite scroll
   useEffect(() => {
@@ -59,7 +75,7 @@ export default function FeedPage() {
     const observer = new IntersectionObserver(async (entries) => {
       if (entries[0].isIntersecting && !loadingMore && hasMore) {
         setLoadingMore(true);
-        const result = await fetchPosts(cursor ?? undefined);
+        const result = await fetchPosts(mode, cursor ?? undefined);
         setPosts((prev) => [...prev, ...(result.data || [])]);
         setCursor(result.nextCursor);
         setHasMore(result.hasMore);
@@ -68,7 +84,7 @@ export default function FeedPage() {
     });
     observer.observe(currentLoader);
     return () => observer.disconnect();
-  }, [cursor, hasMore, loadingMore]);
+  }, [cursor, hasMore, loadingMore, mode]);
 
   function handleNewPost(post: Post) {
     setPosts((prev) => [post, ...prev]);
@@ -86,6 +102,33 @@ export default function FeedPage() {
       <main className="flex-1 max-w-2xl mx-auto px-4 py-6 pb-24 md:pb-6">
         <CreatePostBox onPost={handleNewPost} />
 
+        {/* Feed mode tabs — sticky on mobile so users can flip without scrolling up. */}
+        <div
+          role="tablist"
+          aria-label="Feed mode"
+          className="sticky top-0 z-10 flex gap-1 mt-4 mb-2 p-1 rounded-full bg-white/80 backdrop-blur border border-gray-200 w-fit"
+        >
+          {(Object.keys(MODE_LABELS) as FeedMode[]).map((m) => {
+            const active = mode === m;
+            return (
+              <button
+                key={m}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setMode(m)}
+                className={
+                  'px-4 py-1.5 text-sm rounded-full transition-colors ' +
+                  (active
+                    ? 'bg-brand-500 text-white'
+                    : 'text-gray-600 hover:bg-gray-100')
+                }
+              >
+                {MODE_LABELS[m]}
+              </button>
+            );
+          })}
+        </div>
+
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
@@ -95,7 +138,7 @@ export default function FeedPage() {
             <p className="text-gray-500">No posts yet. Be the first to share something!</p>
           </div>
         ) : (
-          <div className="space-y-4 mt-4">
+          <div className="space-y-4 mt-2">
             {posts.map((post) => (
               <PostCard key={post.id} post={post} onLikeChange={handleLikeChange} />
             ))}
