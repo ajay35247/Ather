@@ -1,9 +1,15 @@
 :root {
+  /* Indian-style palette: saffron, ivory white, India green, navy chakra blue. */
+  --saffron: #ff9933;
+  --india-green: #138808;
+  --chakra: #0a3a82;
+  --ivory: #fff8ee;
   --bg: #0b0b10;
+  --bg-soft: #14141c;
   --fg: #f5f5f7;
-  --muted: #8a8a93;
-  --accent: #7c5cff;
-  --border: #1f1f29;
+  --muted: #a4a4b0;
+  --border: #23232f;
+  --accent: var(--saffron);
 }
 
 * {
@@ -14,21 +20,25 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(255, 153, 51, 0.18), transparent 60%),
+    radial-gradient(1000px 600px at -10% 110%, rgba(19, 136, 8, 0.18), transparent 60%),
+    var(--bg);
   color: var(--fg);
   font-family:
+    "Inter",
+    "Noto Sans Devanagari",
     system-ui,
     -apple-system,
     "Segoe UI",
     Roboto,
-    "Helvetica Neue",
     Arial,
     sans-serif;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 a {
-  color: var(--accent);
+  color: var(--saffron);
   text-decoration: none;
 }
 
@@ -37,38 +47,120 @@ a:hover {
 }
 
 main {
-  max-width: 920px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 4rem 1.5rem;
+  padding: 3.5rem 1.5rem 5rem;
 }
 
-h1 {
-  font-size: 2.25rem;
-  margin: 0 0 0.5rem;
+/* Tricolour bar — top-of-page accent. */
+.tricolour {
+  display: flex;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+}
+.tricolour > span {
+  flex: 1;
+}
+.tricolour > .saffron {
+  background: var(--saffron);
+}
+.tricolour > .white {
+  background: #f5f5f7;
+}
+.tricolour > .green {
+  background: var(--india-green);
 }
 
-.lead {
+.hero h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.02em;
+}
+
+.hero .hi {
+  font-size: clamp(1.5rem, 3vw, 2rem);
   color: var(--muted);
-  margin: 0 0 2rem;
+  margin: 0 0 1.25rem;
+  font-weight: 500;
+}
+
+.hero .lead {
+  color: var(--muted);
+  max-width: 62ch;
+  margin: 0 0 1.75rem;
+  font-size: 1.05rem;
+}
+
+.greeting {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 1.5rem;
+}
+
+.greeting .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--india-green);
+  box-shadow: 0 0 0 4px rgba(19, 136, 8, 0.18);
+}
+
+h2 {
+  margin: 3rem 0 0.25rem;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+}
+
+.section-sub {
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1rem;
-  margin-top: 2rem;
 }
 
 .card {
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem 1.25rem;
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.005));
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--saffron), #ffffff44, var(--india-green));
+  opacity: 0.6;
 }
 
 .card h3 {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.35rem;
   font-size: 1rem;
+}
+
+.card .hi-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
 }
 
 .card p {
@@ -82,9 +174,72 @@ h1 {
   font-size: 0.7rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 0.15rem 0.5rem;
+  padding: 0.15rem 0.55rem;
   border-radius: 999px;
-  background: rgba(124, 92, 255, 0.15);
-  color: var(--accent);
-  margin-bottom: 0.5rem;
+  background: rgba(255, 153, 51, 0.14);
+  color: var(--saffron);
+  margin-bottom: 0.6rem;
+  font-weight: 600;
+}
+
+.tag.green {
+  background: rgba(19, 136, 8, 0.18);
+  color: #4cd964;
+}
+
+.tag.blue {
+  background: rgba(10, 58, 130, 0.28);
+  color: #7aa6ff;
+}
+
+/* Live demo strip showing @ather/india utilities in action. */
+.demo {
+  margin: 2rem 0 0;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.demo .cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.demo .cell .k {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.demo .cell .v {
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.festival-banner {
+  margin: 2rem 0 0;
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(255, 153, 51, 0.18), rgba(19, 136, 8, 0.18));
+  border: 1px solid rgba(255, 153, 51, 0.35);
+  font-size: 0.95rem;
+}
+
+footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }

@@ -11,6 +11,7 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
+    "@ather/india": "0.1.0",
     "@ather/shared": "0.1.0",
     "next": "15.5.15",
     "react": "18.3.1",
