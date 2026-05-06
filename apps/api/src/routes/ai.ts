@@ -2,8 +2,13 @@ import { Router, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { createError } from '../middleware/errorHandler';
+import { limiters } from '../middleware/rateLimits';
 
 const router = Router();
+
+// Per-user budget for the whole AI router. In production this becomes a
+// token-bucket on the LLM-cost dimension, not just request count.
+router.use(authenticate, limiters.ai);
 
 /**
  * AI module — Phase 3/4

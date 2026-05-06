@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { authenticate, optionalAuth, AuthRequest } from '../middleware/auth';
 import { users } from './auth';
 import { createError } from '../middleware/errorHandler';
+import { validateMediaUrls } from '../middleware/urlValidator';
 
 const router = Router();
 
@@ -44,8 +45,17 @@ router.get('/', optionalAuth, (req: AuthRequest, res: Response) => {
 // POST /api/posts
 router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunction) => {
   const { content, type = 'text', mediaUrls = [], tags = [], visibility = 'public' } = req.body;
-  if (!content && mediaUrls.length === 0) {
+  if (!content && (!Array.isArray(mediaUrls) || mediaUrls.length === 0)) {
     return next(createError('Post must have content or media', 400));
+  }
+
+  // Reject `javascript:`, `data:`, internal-network, and userinfo-bearing URLs
+  // before they ever reach the feed renderer (XSS/SSRF defense).
+  let safeMediaUrls: string[];
+  try {
+    safeMediaUrls = validateMediaUrls(mediaUrls, { maxItems: 10 });
+  } catch (e: any) {
+    return next(createError(e?.message || 'Invalid mediaUrls', 400));
   }
 
   const author = users[req.userId!];
@@ -58,7 +68,7 @@ router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunct
     authorId: req.userId!,
     type,
     content: content || '',
-    mediaUrls,
+    mediaUrls: safeMediaUrls,
     tags,
     visibility,
     likesCount: 0,

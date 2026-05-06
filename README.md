@@ -119,8 +119,13 @@ self-deploying systems, shadow-network contact scraping, on-platform investment 
 
 ## License
 
-TBD. Until a license is added, all rights reserved by the repository owner.
-# Ather — Unified Social Platform
+TBD. Until a license is added, all rights reserved by the repository owner. The
+extended product reference below reflects the unified-social-platform draft and
+is preserved for context; license and stack details there are non-binding.
+
+---
+
+# Reference: Unified Social Platform draft
 
 > **One platform for everything social.** Chat, create, stream, discover, and earn — all inside Ather.
 

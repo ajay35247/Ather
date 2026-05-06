@@ -2,6 +2,8 @@ import { Router, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { createError } from '../middleware/errorHandler';
+import { idempotency } from '../middleware/idempotency';
+import { limiters } from '../middleware/rateLimits';
 import { users } from './auth';
 
 const router = Router();
@@ -69,9 +71,15 @@ router.get('/wallet', authenticate, (req: AuthRequest, res: Response) => {
 
 // ── POST /api/monetization/wallet/topup ─────────────────────────────────────
 // Simulates a payment provider topping up a wallet.
+//
+// `idempotency()` lets clients retry a topup safely (e.g. after a network
+// blip) by sending the same `Idempotency-Key`; the second call replays the
+// cached response instead of double-crediting the wallet.
 router.post(
   '/wallet/topup',
   authenticate,
+  limiters.money,
+  idempotency(),
   (req: AuthRequest, res: Response, next: NextFunction) => {
     const amount = Number(req.body?.amount);
     if (!Number.isFinite(amount) || amount <= 0 || amount > 1_000_000) {
@@ -97,7 +105,9 @@ router.post(
 
 // ── POST /api/monetization/tip ──────────────────────────────────────────────
 // Send a tip from the authenticated user to another user.
-router.post('/tip', authenticate, (req: AuthRequest, res: Response, next: NextFunction) => {
+//
+// Idempotent on `Idempotency-Key` — a retried tip will not double-debit.
+router.post('/tip', authenticate, limiters.money, idempotency(), (req: AuthRequest, res: Response, next: NextFunction) => {
   const { toUserId, amount, note } = req.body as {
     toUserId?: string;
     amount?: number;
@@ -162,6 +172,8 @@ const TIER_PRICE: Record<Subscription['tier'], number> = {
 router.post(
   '/subscriptions',
   authenticate,
+  limiters.money,
+  idempotency(),
   (req: AuthRequest, res: Response, next: NextFunction) => {
     const { creatorId, tier = 'basic' } = req.body as {
       creatorId?: string;
