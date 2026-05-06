@@ -1,0 +1,12 @@
+# Auto-aligned with services/moderation/src/index.ts (port 4011).
+# Deploy with: helm upgrade --install moderation infra/helm/_service \
+#                -f infra/helm/values/moderation.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: content
+  port: 80
+  targetPort: 4011
+
+image:
+  repository: ghcr.io/ajay35247/ather-moderation

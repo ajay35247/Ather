@@ -1,0 +1,12 @@
+# Auto-aligned with services/subscriptions/src/index.ts (port 4032).
+# Deploy with: helm upgrade --install subscriptions infra/helm/_service \
+#                -f infra/helm/values/subscriptions.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: economy
+  port: 80
+  targetPort: 4032
+
+image:
+  repository: ghcr.io/ajay35247/ather-subscriptions

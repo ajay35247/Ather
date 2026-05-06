@@ -1,0 +1,82 @@
+## Generic Ather service chart defaults.
+## Override per-service by passing -f infra/helm/values/<service>.yaml
+## and per-environment via -f values.<env>.yaml.
+
+service:
+  plane: platform        # one of: identity, content, social, messaging, economy, platform, ml
+  type: ClusterIP
+  port: 80
+  targetPort: 4000
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/ajay35247/ather-service
+  # Pinned placeholder. Always override via the deploy workflow with a
+  # commit-SHA tag. Never use `latest` — rollbacks need determinism and
+  # audits need a known digest.
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 384Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+secret:
+  name: ather-shared-secrets
+
+env:
+  NODE_ENV: production
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318
+
+probes:
+  readiness:
+    path: /health
+    initialDelaySeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+  liveness:
+    path: /health
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    failureThreshold: 3
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+
+networkPolicy:
+  enabled: true
+  ingressFromGateway: true
+
+topologySpread:
+  enabled: true
+
+prometheus:
+  scrape: true
+  path: /metrics
+
+# Whether this service requires the cross-service `internal-secret`
+# (set true for: notification, content-events, ledger, wallet, payments,
+# mini-app-runtime, plugin-marketplace, bot-platform — see docs/services.md).
+internalSecret:
+  enabled: false

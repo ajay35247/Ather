@@ -1,0 +1,12 @@
+apiVersion: v2
+name: ather-service
+description: |
+  Generic Helm chart for any Ather service (Phase 1+).
+  Each service ships a values file at infra/helm/values/<service>.yaml that
+  overrides the image, port, plane label, and any service-specific tuning.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords: [ather, microservice]
+maintainers:
+  - name: Ather Team

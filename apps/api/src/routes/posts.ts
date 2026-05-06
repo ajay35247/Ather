@@ -4,6 +4,7 @@ import { authenticate, optionalAuth, AuthRequest } from '../middleware/auth';
 import { users } from './auth';
 import { createError } from '../middleware/errorHandler';
 import { validateMediaUrls } from '../middleware/urlValidator';
+import { createNotification } from './notifications';
 
 const router = Router();
 
@@ -115,6 +116,10 @@ router.post('/:id/like', authenticate, (req: AuthRequest, res: Response, next: N
 
   likedPosts[post.id].add(req.userId!);
   post.likesCount += 1;
+  // Fire-and-forget notification to the post author. Self-likes are silent.
+  if (post.authorId && post.authorId !== req.userId) {
+    createNotification(post.authorId, 'post.like', req.userId!, 'liked your post', post.id);
+  }
   res.json({ success: true, data: { likesCount: post.likesCount } });
 });
 
@@ -151,6 +156,16 @@ router.post(
 
     post.comments.push(comment);
     post.commentsCount += 1;
+    // Notify the post author of new comment (silent on self-comment).
+    if (post.authorId && post.authorId !== req.userId) {
+      createNotification(
+        post.authorId,
+        'post.comment',
+        req.userId!,
+        'commented on your post',
+        post.id,
+      );
+    }
     res.status(201).json({ success: true, data: comment });
   },
 );
