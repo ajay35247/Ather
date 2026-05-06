@@ -13,6 +13,12 @@ import messagesRouter from './routes/messages';
 import communitiesRouter from './routes/communities';
 import notificationsRouter from './routes/notifications';
 import feedRouter from './routes/feed';
+import aiRouter from './routes/ai';
+import monetizationRouter from './routes/monetization';
+import liveRouter from './routes/live';
+import miniAppsRouter from './routes/miniapps';
+import identityRouter from './routes/identity';
+import wellbeingRouter from './routes/wellbeing';
 import { errorHandler } from './middleware/errorHandler';
 import { requireJwtSecret } from './middleware/auth';
 import { registerSocketHandlers } from './socket/handlers';
@@ -58,6 +64,12 @@ app.use('/api/messages', messagesRouter);
 app.use('/api/communities', communitiesRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/feed', feedRouter);
+app.use('/api/ai', aiRouter);
+app.use('/api/monetization', monetizationRouter);
+app.use('/api/live', liveRouter);
+app.use('/api/mini-apps', miniAppsRouter);
+app.use('/api/identity', identityRouter);
+app.use('/api/wellbeing', wellbeingRouter);
 
 // Health check
 app.get('/health', (_req, res) => {
