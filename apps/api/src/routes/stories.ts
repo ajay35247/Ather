@@ -20,6 +20,7 @@ const MAX_STORY_TEXT = 500;
 
 const ALLOWED_TYPES = new Set(['image', 'video', 'text']);
 const ALLOWED_REACTIONS = new Set(['❤️', '🔥', '😂', '😮', '😢', '👏']);
+const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
 interface Story {
   id: string;
@@ -120,8 +121,7 @@ router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunct
   // Validate optional background color (hex like #RRGGBB or #RGB).
   if (
     backgroundColor !== undefined &&
-    (typeof backgroundColor !== 'string' ||
-      !/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(backgroundColor))
+    (typeof backgroundColor !== 'string' || !HEX_COLOR_RE.test(backgroundColor))
   ) {
     return next(createError('Invalid backgroundColor', 400));
   }
