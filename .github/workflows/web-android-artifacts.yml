@@ -1,0 +1,63 @@
+name: Web + Android Artifacts
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web-and-android-build:
+    name: Build web + unsigned APK/AAB
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Build web export and sync Capacitor
+        run: npm --workspace @ather/web run build:mobile
+
+      - name: Build unsigned APK and AAB
+        run: |
+          cd apps/web/android
+          ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
+
+      - name: Upload web static artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-static-out
+          path: apps/web/out
+          if-no-files-found: error
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-aab
+          path: |
+            apps/web/android/app/build/outputs/apk/debug/*.apk
+            apps/web/android/app/build/outputs/apk/release/*.apk
+            apps/web/android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error

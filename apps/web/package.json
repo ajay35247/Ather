@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "echo 'no tests'",
-    "build:mobile": "npm run build && npx cap sync android",
+    "build:mobile": "NEXT_OUTPUT=export next build && npx cap sync android",
     "mobile:sync": "npx cap sync android",
     "mobile:open": "npx cap open android",
     "android:apk:debug": "cd android && ./gradlew assembleDebug",

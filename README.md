@@ -67,6 +67,30 @@ npm run dev:profile     # http://localhost:4002
 npm run dev:web         # http://localhost:3000
 ```
 
+### Android (Capacitor) + web static artifacts
+
+Android app wrapper is configured in `apps/web` with:
+- App ID: `com.omniverse.app`
+- App Name: `omniverse`
+
+Build commands:
+
+```bash
+# Build Next.js static export for mobile and sync to Android project
+npm --workspace @ather/web run build:mobile
+
+# Build APKs (debug + unsigned release)
+npm --workspace @ather/web run android:apk:debug
+npm --workspace @ather/web run android:apk:release
+
+# Build unsigned release AAB
+npm --workspace @ather/web run android:aab:release
+```
+
+CI workflow `.github/workflows/web-android-artifacts.yml` uploads:
+- `web-static-out` (from `apps/web/out`)
+- `android-apk-aab` (debug APK, unsigned release APK, unsigned release AAB)
+
 > **Note:** Phase 0 services use **in-memory stores** so the scaffold is runnable without
 > Postgres. Phase 1 swaps the `*Store` implementations for real Postgres-backed ones — the
 > interfaces are intentionally narrow so the swap is mechanical.
