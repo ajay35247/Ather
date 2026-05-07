@@ -12,9 +12,10 @@ forward placeholders only where they are documented and discoverable.
 ├── apps/                # user-facing surfaces (mobile, web, desktop, tv, watch, vr, ar)
 ├── services/            # backend microservices — every dir is *-service
 ├── packages/            # shared TS libraries (service-kit, shared, i18n, india, ...)
+├── ai/                  # offline training, inference notebooks, model weights
+├── databases/           # per-engine schema docs (postgres, mongo, redis, es, vector, clickhouse)
 ├── gateway/             # api-gateway + edge-gateway (cloudflare / cdn)            ← reserved
 ├── event-streaming/     # kafka topics / consumers / producers / event-bus         ← reserved
-├── ai-ml/               # offline training, MLOps, feature store, datasets         ← reserved
 ├── cloud/               # per-cloud IaC (aws / gcp / azure)                        ← reserved
 ├── infra/               # portable IaC: docker / k8s / helm / terraform / nginx
 ├── security/            # zero-trust, compliance, gdpr, dpdp-india, IR             ← reserved
@@ -45,14 +46,14 @@ without polluting the repo with hundreds of empty stubs.
 - Kafka via `event-streaming/` (Redpanda dev → MSK / Confluent prod).
 - CDN edge via `gateway/edge-gateway/`.
 - Kubernetes autoscaling (HPA + PDB already in `_service` chart).
-- AI ranking online (LightGBM / Triton served from `ai-ml/inference/`).
+- AI ranking online (LightGBM / Triton served from `ai/inference/`).
 - Distributed cache (Redis cluster).
 
 ### Phase 3 — Global scale (10M–1B users)
 - Multi-region infra in `cloud/{aws,gcp,azure}`.
 - Edge compute for personalisation.
 - Vector DB (`services/vector-search-service` → Milvus / Pinecone).
-- Real-time ML pipelines (`ai-ml/pipelines/`).
+- Real-time ML pipelines (`ai/pipelines/` — to be added under the existing `ai/` tree).
 - Global failover, autonomous scaling, chaos-engineered.
 
 ## Core loop
@@ -66,7 +67,7 @@ User opens app
     → Messaging retains           (chat-service, presence-service, notification-service)
     → Monetisation activates      (wallet-service, payments-service, subscriptions-service,
                                    tips-service, ads-service, ledger-service)
-    → AI learns                   (analytics-service → ai-ml/training/)
+    → AI learns                   (analytics-service → ai/training/)
     → Platform improves           (experimentation in growth-services)
     → Infinite growth loop
 ```
@@ -74,7 +75,8 @@ User opens app
 ## What's intentionally *not* in this repo (yet)
 
 - `microservices/` as an alias for `services/` — kept as `services/` only.
-- `databases/` as a top-level dir — schema lives in `infra/postgres/migrations/`.
+- `ai-ml/` as a separate dir — folded into the existing `ai/` directory
+  which already covers training / inference / models / datasets / notebooks.
 - `design-system/` as a top-level dir — already at `packages/design-system`.
 - `ci-cd/` as a top-level dir — already at `.github/workflows/`.
 

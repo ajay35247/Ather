@@ -128,7 +128,7 @@ A 60-second smoke test against the auth service:
 ```bash
 # Terminal 1 — start auth service
 cp services/auth-service/.env.example services/auth-service/.env
-npm run dev:auth
+pnpm dev:auth
 
 # Terminal 2 — exercise it
 curl -s -X POST http://localhost:4001/auth/register \
