@@ -43,6 +43,21 @@ module.exports = {
           saffron: '#ff9933',
           chakra: '#0a3a82',
         },
+        // Omniverse design tokens (semantic, used by the brand mark and
+        // any future Omniverse-scoped surfaces). These are additive — the
+        // existing brand/chakra/india scales above remain canonical.
+        omniverse: {
+          // Primary brand orbit color (= brand-500, codified for clarity).
+          orbit: '#F97316',
+          // The "verse" node — slightly lighter, used for highlights.
+          node: '#FDBA74',
+          // Deep-space background for hero sections / splash.
+          space: '#0B0F1A',
+          // Ink: high-contrast text on light surfaces.
+          ink: '#0F172A',
+          // Surface: light neutral for cards on dark.
+          surface: '#F8FAFC',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'Noto Sans Devanagari', 'system-ui', 'sans-serif'],

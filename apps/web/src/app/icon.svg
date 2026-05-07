@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Next.js file-based metadata icon.
+
+    Lives at apps/web/src/app/icon.svg so Next 14 emits the correct
+    <link rel="icon" type="image/svg+xml"> automatically. This is the
+    primary, scalable favicon for modern browsers.
+
+    Geometry:
+      - 32x32 viewport (favicon-native size)
+      - white glyph on saffron background, matching the Tailwind
+        `omniverse.orbit` token (#F97316).
+      - corner radius 6/32 (~19%) so the background reads as an "app
+        icon" in browser tabs and PWA installs. The same ratio is used
+        for `apple-icon.png` and `favicon.ico` so all three favicons
+        share one silhouette.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Omniverse">
+    <title>Omniverse</title>
+    <rect width="32" height="32" rx="6" fill="#F97316" />
+    <circle cx="16" cy="16" r="9" fill="none" stroke="#FFFFFF" stroke-width="2.4" />
+    <circle cx="22.6" cy="9.4" r="2.6" fill="#FFFFFF" />
+</svg>

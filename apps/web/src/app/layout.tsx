@@ -2,6 +2,12 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Providers } from '@/components/layout/Providers';
 
+// Favicons are wired via Next 14 app-directory file conventions:
+//   apps/web/src/app/icon.svg          → <link rel="icon" type="image/svg+xml">
+//   apps/web/src/app/apple-icon.png    → <link rel="apple-touch-icon" sizes="180x180">
+//   apps/web/src/app/favicon.ico       → <link rel="shortcut icon">
+// Adding a `metadata.icons` block here would *override* that file-based
+// convention, so we intentionally leave it out.
 export const metadata: Metadata = {
   title: 'Ather — आपका सोशल OS · Bharat-First Social Platform',
   description:

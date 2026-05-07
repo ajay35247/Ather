@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive icon foreground — Omniverse glyph.
+
+    108dp canvas, with the launcher's safe zone being the central 66dp
+    (anywhere outside that may be cropped by circle, squircle, or rounded
+    masks). Glyph centered on (54, 54) and sized to fit within radius ~28.
+
+    Geometry:
+      - white stroked ring: cx=54, cy=54, r=22, stroke 6 (path approximates
+        a circle via four cubic-Bezier arcs, the standard 0.5522847 ratio)
+      - white filled node: cx=70, cy=38, r=7 — the node is intentionally
+        smaller than a 1:1 scale-up of the 24-unit master (which would
+        give r≈10.8). At r≈10.8 the offset node would dominate the safe
+        zone and crowd the ring; r=7 keeps the orbit/node hierarchy
+        readable inside Android's adaptive-icon mask crops.
+
+    All paths are pure vectors, so the icon is resolution-independent and
+    supersedes the previous bitmap mipmaps.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer ring (stroked circle, drawn as 4 cubic arcs) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="6"
+        android:fillColor="#00000000"
+        android:pathData="M54,32
+                          C66.15,32 76,41.85 76,54
+                          C76,66.15 66.15,76 54,76
+                          C41.85,76 32,66.15 32,54
+                          C32,41.85 41.85,32 54,32 Z" />
+
+    <!-- Orbit node (filled circle) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,31
+                          C73.866,31 77,34.134 77,38
+                          C77,41.866 73.866,45 70,45
+                          C66.134,45 63,41.866 63,38
+                          C63,34.134 66.134,31 70,31 Z" />
+</vector>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Adaptive icon monochrome layer (Android 13+ themed icons / Material You).
+
+    Same geometry as the foreground, but the system tints it dynamically
+    using the user's wallpaper-derived color scheme. Per the spec, fills
+    should be opaque (the alpha channel is the only thing read).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="6"
+        android:fillColor="#00000000"
+        android:pathData="M54,32
+                          C66.15,32 76,41.85 76,54
+                          C76,66.15 66.15,76 54,76
+                          C41.85,76 32,66.15 32,54
+                          C32,41.85 41.85,32 54,32 Z" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,31
+                          C73.866,31 77,34.134 77,38
+                          C77,41.866 73.866,45 70,45
+                          C66.134,45 63,41.866 63,38
+                          C63,34.134 66.134,31 70,31 Z" />
+</vector>
