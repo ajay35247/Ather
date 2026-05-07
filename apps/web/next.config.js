@@ -4,7 +4,7 @@ const isMobileExport = process.env.NEXT_OUTPUT === 'export';
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  output: isMobileExport ? 'export' : undefined,
+  ...(isMobileExport && { output: 'export' }),
   trailingSlash: isMobileExport,
   typedRoutes: false,
   images: {
