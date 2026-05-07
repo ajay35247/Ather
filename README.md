@@ -100,7 +100,12 @@ For Play-ready signed release artifacts, add these GitHub Actions secrets:
 When all four secrets are present, the same workflow also builds and uploads:
 - `android-apk-aab-signed` (signed release APK + signed release AAB)
 
-Signed builds are only attempted outside `pull_request` runs. Release signing is injected at build time via Gradle project properties, so no keystore or password is committed to the repository.
+Manual workflow runs (`workflow_dispatch`) include `android_artifact_mode`:
+- `auto` (default): always build unsigned; also build signed when all signing secrets exist
+- `unsigned-only`: force unsigned artifacts only
+- `signed-only`: force signed artifacts only (fails fast if signing secrets are missing)
+
+Outside manual runs, signed builds are only attempted outside `pull_request` runs. Release signing is injected at build time via Gradle project properties, so no keystore or password is committed to the repository.
 
 > **Note:** Phase 0 services use **in-memory stores** so the scaffold is runnable without
 > Postgres. Phase 1 swaps the `*Store` implementations for real Postgres-backed ones — the

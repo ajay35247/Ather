@@ -5,6 +5,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      android_artifact_mode:
+        description: "Android artifact mode"
+        required: true
+        default: auto
+        type: choice
+        options:
+          - auto
+          - unsigned-only
+          - signed-only
 
 permissions:
   contents: read
@@ -42,12 +52,44 @@ jobs:
       - name: Build web export and sync Capacitor
         run: npm --workspace @ather/web run build:mobile
 
+      - name: Resolve Android build mode
+        run: |
+          MODE="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.android_artifact_mode || 'auto' }}"
+          case "$MODE" in
+            auto)
+              echo "BUILD_UNSIGNED=true" >> "$GITHUB_ENV"
+              if [ "${HAS_ANDROID_SIGNING}" = "true" ]; then
+                echo "BUILD_SIGNED=true" >> "$GITHUB_ENV"
+              else
+                echo "BUILD_SIGNED=false" >> "$GITHUB_ENV"
+              fi
+              ;;
+            unsigned-only)
+              echo "BUILD_UNSIGNED=true" >> "$GITHUB_ENV"
+              echo "BUILD_SIGNED=false" >> "$GITHUB_ENV"
+              ;;
+            signed-only)
+              if [ "${HAS_ANDROID_SIGNING}" != "true" ]; then
+                echo "signed-only mode requested, but Android signing secrets are missing."
+                exit 1
+              fi
+              echo "BUILD_UNSIGNED=false" >> "$GITHUB_ENV"
+              echo "BUILD_SIGNED=true" >> "$GITHUB_ENV"
+              ;;
+            *)
+              echo "Unsupported android_artifact_mode: $MODE"
+              exit 1
+              ;;
+          esac
+
       - name: Build unsigned APK and AAB
+        if: env.BUILD_UNSIGNED == 'true'
         run: |
           cd apps/web/android
           ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
 
       - name: Stage unsigned Android artifacts
+        if: env.BUILD_UNSIGNED == 'true'
         run: |
           mkdir -p /tmp/android-artifacts/unsigned/apk-debug /tmp/android-artifacts/unsigned/apk-release /tmp/android-artifacts/unsigned/aab-release
           cp apps/web/android/app/build/outputs/apk/debug/*.apk /tmp/android-artifacts/unsigned/apk-debug/
@@ -55,12 +97,12 @@ jobs:
           cp apps/web/android/app/build/outputs/bundle/release/*.aab /tmp/android-artifacts/unsigned/aab-release/
 
       - name: Decode Android release keystore
-        if: env.HAS_ANDROID_SIGNING == 'true'
+        if: env.BUILD_SIGNED == 'true'
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/omniverse-release.keystore
 
       - name: Build signed Play-ready release artifacts
-        if: env.HAS_ANDROID_SIGNING == 'true'
+        if: env.BUILD_SIGNED == 'true'
         env:
           ORG_GRADLE_PROJECT_ATHER_UPLOAD_STORE_FILE: /tmp/omniverse-release.keystore
           ORG_GRADLE_PROJECT_ATHER_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -71,7 +113,7 @@ jobs:
           ./gradlew --no-daemon clean assembleRelease bundleRelease
 
       - name: Stage signed Android artifacts
-        if: env.HAS_ANDROID_SIGNING == 'true'
+        if: env.BUILD_SIGNED == 'true'
         run: |
           mkdir -p /tmp/android-artifacts/signed/apk-release /tmp/android-artifacts/signed/aab-release
           cp apps/web/android/app/build/outputs/apk/release/*.apk /tmp/android-artifacts/signed/apk-release/
@@ -85,6 +127,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Android artifacts
+        if: env.BUILD_UNSIGNED == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-aab-unsigned
@@ -95,7 +138,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload signed Android artifacts
-        if: env.HAS_ANDROID_SIGNING == 'true'
+        if: env.BUILD_SIGNED == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: android-apk-aab-signed
