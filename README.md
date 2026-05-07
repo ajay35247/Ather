@@ -89,7 +89,18 @@ npm --workspace @ather/web run android:aab:release
 
 CI workflow `.github/workflows/web-android-artifacts.yml` uploads:
 - `web-static-out` (from `apps/web/out`)
-- `android-apk-aab` (debug APK, unsigned release APK, unsigned release AAB)
+- `android-apk-aab-unsigned` (debug APK, unsigned release APK, unsigned release AAB)
+
+For Play-ready signed release artifacts, add these GitHub Actions secrets:
+- `ANDROID_KEYSTORE_BASE64` — base64-encoded `.jks` or `.keystore`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+When all four secrets are present, the same workflow also builds and uploads:
+- `android-apk-aab-signed` (signed release APK + signed release AAB)
+
+Signed builds are only attempted outside `pull_request` runs. Release signing is injected at build time via Gradle project properties, so no keystore or password is committed to the repository.
 
 > **Note:** Phase 0 services use **in-memory stores** so the scaffold is runnable without
 > Postgres. Phase 1 swaps the `*Store` implementations for real Postgres-backed ones — the

@@ -15,8 +15,10 @@ concurrency:
 
 jobs:
   web-and-android-build:
-    name: Build web + unsigned APK/AAB
+    name: Build web + Android artifacts
     runs-on: ubuntu-latest
+    env:
+      HAS_ANDROID_SIGNING: ${{ github.event_name != 'pull_request' && secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,6 +47,36 @@ jobs:
           cd apps/web/android
           ./gradlew --no-daemon assembleDebug assembleRelease bundleRelease
 
+      - name: Stage unsigned Android artifacts
+        run: |
+          mkdir -p /tmp/android-artifacts/unsigned/apk-debug /tmp/android-artifacts/unsigned/apk-release /tmp/android-artifacts/unsigned/aab-release
+          cp apps/web/android/app/build/outputs/apk/debug/*.apk /tmp/android-artifacts/unsigned/apk-debug/
+          cp apps/web/android/app/build/outputs/apk/release/*.apk /tmp/android-artifacts/unsigned/apk-release/
+          cp apps/web/android/app/build/outputs/bundle/release/*.aab /tmp/android-artifacts/unsigned/aab-release/
+
+      - name: Decode Android release keystore
+        if: env.HAS_ANDROID_SIGNING == 'true'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/omniverse-release.keystore
+
+      - name: Build signed Play-ready release artifacts
+        if: env.HAS_ANDROID_SIGNING == 'true'
+        env:
+          ORG_GRADLE_PROJECT_ATHER_UPLOAD_STORE_FILE: /tmp/omniverse-release.keystore
+          ORG_GRADLE_PROJECT_ATHER_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_ATHER_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_ATHER_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cd apps/web/android
+          ./gradlew --no-daemon clean assembleRelease bundleRelease
+
+      - name: Stage signed Android artifacts
+        if: env.HAS_ANDROID_SIGNING == 'true'
+        run: |
+          mkdir -p /tmp/android-artifacts/signed/apk-release /tmp/android-artifacts/signed/aab-release
+          cp apps/web/android/app/build/outputs/apk/release/*.apk /tmp/android-artifacts/signed/apk-release/
+          cp apps/web/android/app/build/outputs/bundle/release/*.aab /tmp/android-artifacts/signed/aab-release/
+
       - name: Upload web static artifact
         uses: actions/upload-artifact@v4
         with:
@@ -55,9 +87,19 @@ jobs:
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk-aab
+          name: android-apk-aab-unsigned
           path: |
-            apps/web/android/app/build/outputs/apk/debug/*.apk
-            apps/web/android/app/build/outputs/apk/release/*.apk
-            apps/web/android/app/build/outputs/bundle/release/*.aab
+            /tmp/android-artifacts/unsigned/apk-debug/*.apk
+            /tmp/android-artifacts/unsigned/apk-release/*.apk
+            /tmp/android-artifacts/unsigned/aab-release/*.aab
+          if-no-files-found: error
+
+      - name: Upload signed Android artifacts
+        if: env.HAS_ANDROID_SIGNING == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-aab-signed
+          path: |
+            /tmp/android-artifacts/signed/apk-release/*.apk
+            /tmp/android-artifacts/signed/aab-release/*.aab
           if-no-files-found: error
