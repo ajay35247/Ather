@@ -8,7 +8,13 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "echo 'no tests'"
+    "test": "echo 'no tests'",
+    "build:mobile": "npm run build && npx cap sync android",
+    "mobile:sync": "npx cap sync android",
+    "mobile:open": "npx cap open android",
+    "android:apk:debug": "cd android && ./gradlew assembleDebug",
+    "android:aab:release": "cd android && ./gradlew bundleRelease",
+    "android:apk:release": "cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
     "@ather/i18n": "0.1.0",
@@ -25,6 +31,9 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@capacitor/android": "^7.6.2",
+    "@capacitor/cli": "^7.6.2",
+    "@capacitor/core": "^7.6.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
