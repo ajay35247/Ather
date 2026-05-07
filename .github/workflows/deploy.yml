@@ -1,14 +1,23 @@
-name: deploy-services
+name: deploy
 
-# Generic build+deploy workflow for any of the 37 Ather services.
-# Triggered manually via workflow_dispatch (with a service name) or
-# automatically on `main` for any path under `services/<name>/**`.
+# Generic helm-based deploy. Replaces the previous deploy-feed.yml and
+# deploy-services.yml. Accepts a service name, validates against the
+# helm values allowlist (infra/helm/values/<name>.yaml), builds + pushes
+# the image (if a Dockerfile exists), and runs `helm upgrade --install`.
 #
-# Like deploy-feed.yml, the actual `helm upgrade` step is gated behind a
-# `vars.DEPLOY_ENABLED == 'true'` repo variable + a `KUBE_CONFIG_DATA`
-# secret, so this file is safe to ship before any cluster exists.
+# Like the predecessors, the actual cluster step is gated on
+# `vars.DEPLOY_ENABLED == 'true'` and `secrets.KUBE_CONFIG_DATA`, so the
+# workflow is safe to ship before any cluster exists.
 
 on:
+  workflow_call:
+    inputs:
+      service:
+        type: string
+        required: true
+      environment:
+        type: string
+        default: stage
   workflow_dispatch:
     inputs:
       service:
@@ -27,7 +36,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: deploy-${{ github.event.inputs.service }}-${{ github.event.inputs.environment }}
+  group: deploy-${{ inputs.service }}-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
@@ -37,31 +46,36 @@ jobs:
       service: ${{ steps.v.outputs.service }}
       environment: ${{ steps.v.outputs.environment }}
       image: ${{ steps.v.outputs.image }}
+      has_dockerfile: ${{ steps.v.outputs.has_dockerfile }}
     steps:
       - uses: actions/checkout@v4
       - id: v
         run: |
-          SVC="${{ github.event.inputs.service }}"
-          ENV="${{ github.event.inputs.environment }}"
-          # Strict allowlist: must be a real service folder *and* have a values file.
+          SVC="${{ inputs.service }}"
+          ENV="${{ inputs.environment }}"
           if [ ! -d "services/${SVC}" ]; then
             echo "::error::services/${SVC} does not exist"; exit 1
           fi
           if [ ! -f "infra/helm/values/${SVC}.yaml" ]; then
             echo "::error::infra/helm/values/${SVC}.yaml does not exist"; exit 1
           fi
-          if [ ! -f "services/${SVC}/Dockerfile" ]; then
-            echo "::warning::services/${SVC}/Dockerfile missing — only feed currently has one"
+          HAS_DOCKERFILE=false
+          if [ -f "services/${SVC}/Dockerfile" ]; then
+            HAS_DOCKERFILE=true
+          else
+            echo "::warning::services/${SVC}/Dockerfile missing — image build will be skipped"
           fi
-          echo "service=${SVC}"           >> "$GITHUB_OUTPUT"
-          echo "environment=${ENV}"       >> "$GITHUB_OUTPUT"
-          echo "image=ghcr.io/${{ github.repository_owner }}/ather-${SVC}" >> "$GITHUB_OUTPUT"
+          {
+            echo "service=${SVC}"
+            echo "environment=${ENV}"
+            echo "image=ghcr.io/${{ github.repository_owner }}/ather-${SVC}"
+            echo "has_dockerfile=${HAS_DOCKERFILE}"
+          } >> "$GITHUB_OUTPUT"
 
   build-and-push:
     needs: validate-input
+    if: needs.validate-input.outputs.has_dockerfile == 'true'
     runs-on: ubuntu-latest
-    # Only run if there's a Dockerfile to build.
-    if: ${{ hashFiles(format('services/{0}/Dockerfile', needs.validate-input.outputs.service)) != '' }}
     outputs:
       image_tag: ${{ steps.meta.outputs.tag }}
     steps:
@@ -90,8 +104,13 @@ jobs:
 
   helm-deploy:
     needs: [validate-input, build-and-push]
+    # build-and-push is conditional, so we must allow it to be skipped
+    # while still running helm-deploy. Use `always()` + explicit input check.
+    if: |
+      always() &&
+      vars.DEPLOY_ENABLED == 'true' &&
+      (needs.build-and-push.result == 'success' || needs.build-and-push.result == 'skipped')
     runs-on: ubuntu-latest
-    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     environment: ${{ needs.validate-input.outputs.environment }}
     steps:
       - uses: actions/checkout@v4
@@ -105,13 +124,19 @@ jobs:
           version: v3.14.4
       - name: Helm upgrade --install
         run: |
-          helm upgrade --install "${{ needs.validate-input.outputs.service }}" ./infra/helm/_service \
+          SVC="${{ needs.validate-input.outputs.service }}"
+          IMAGE="${{ needs.validate-input.outputs.image }}"
+          # If we built a fresh image, deploy that exact tag; otherwise use
+          # the rolling environment tag (set by an earlier deploy or out-of-band).
+          TAG="${{ needs.build-and-push.outputs.image_tag || needs.validate-input.outputs.environment }}"
+          helm upgrade --install "${SVC}" ./infra/helm/_service \
             --namespace ather --create-namespace \
-            --values "./infra/helm/values/${{ needs.validate-input.outputs.service }}.yaml" \
-            --set image.repository=${{ needs.validate-input.outputs.image }} \
-            --set image.tag=${{ needs.build-and-push.outputs.image_tag }} \
+            --values "./infra/helm/values/${SVC}.yaml" \
+            --set image.repository="${IMAGE}" \
+            --set image.tag="${TAG}" \
             --atomic --timeout 5m
       - name: Smoke test
         run: |
-          kubectl -n ather rollout status "deploy/${{ needs.validate-input.outputs.service }}" --timeout=180s
-          kubectl -n ather get pods -l "app=${{ needs.validate-input.outputs.service }}"
+          SVC="${{ needs.validate-input.outputs.service }}"
+          kubectl -n ather rollout status "deploy/${SVC}" --timeout=180s
+          kubectl -n ather get pods -l "app=${SVC}"

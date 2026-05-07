@@ -222,7 +222,7 @@ flowchart LR
     Watch -->|breach| Rollback[Auto rollback]
 ```
 
-The deploy workflow is at [`.github/workflows/deploy-feed.yml`](../.github/workflows/deploy-feed.yml). It's gated: the image is built and pushed on every merge to `main`, but the `helm upgrade` step only runs when the repo variable `DEPLOY_ENABLED == 'true'` and `KUBE_CONFIG_DATA` secret is set — so this file is safe to merge before any cluster exists.
+The deploy workflow is at [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) (with the `cd.yml` orchestrator running it on push to main). It's gated: the image is built and pushed on every merge to `main`, but the `helm upgrade` step only runs when the repo variable `DEPLOY_ENABLED == 'true'` and `KUBE_CONFIG_DATA` secret is set — so this file is safe to merge before any cluster exists.
 
 ### 8.1 AWS topology (target)
 

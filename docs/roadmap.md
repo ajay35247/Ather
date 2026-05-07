@@ -112,7 +112,7 @@ Ecosystem — 7 services with strict allowlists / sandboxes.
 - [x] **Generic Helm chart** at `infra/helm/_service/` + per-service values
       under `infra/helm/values/<service>.yaml` (37 files, all render via
       `helm template`); generic deploy workflow at
-      `.github/workflows/deploy-services.yml` (gated on
+      `.github/workflows/deploy.yml` (gated on
       `vars.DEPLOY_ENABLED`).
 
 ## Phase 5 — deferred by policy

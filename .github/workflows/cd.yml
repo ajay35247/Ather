@@ -1,0 +1,62 @@
+name: cd
+
+# Continuous-deployment orchestrator. On push to main, builds all service
+# images that have a Dockerfile (via docker.yml) and then deploys the feed
+# service automatically when its source paths changed (mirroring the
+# behaviour of the previous deploy-feed.yml). Other services continue to
+# deploy via the manually-triggered `deploy.yml` workflow.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [stage, prod]
+        default: stage
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      feed: ${{ steps.filter.outputs.feed }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            feed:
+              - 'services/feed/**'
+              - 'packages/service-kit/**'
+              - 'packages/shared/**'
+              - 'infra/helm/values/feed.yaml'
+              - 'infra/helm/_service/**'
+
+  build-images:
+    uses: ./.github/workflows/docker.yml
+    with:
+      push: true
+      environment: ${{ inputs.environment || 'stage' }}
+    secrets: inherit
+
+  deploy-feed:
+    needs: [detect-changes, build-images]
+    # Only deploy feed when its sources actually changed (or on manual dispatch).
+    if: needs.detect-changes.outputs.feed == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      service: feed
+      environment: ${{ inputs.environment || 'stage' }}
+    secrets: inherit

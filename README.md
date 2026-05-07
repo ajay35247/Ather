@@ -34,7 +34,7 @@ ather/
 │   ├── docker-compose.yml   # Local Postgres + Redis
 │   └── postgres/init.sql    # Per-service Postgres schemas
 ├── docs/                    # Architecture, API, DB, security, scaling, monetization, roadmap, services
-└── .github/workflows/ci.yml # Typecheck · build · test
+└── .github/workflows/    # ci · lint · tests · security-scan · docker · deploy · cd
 ```
 
 Each service uses `@ather/service-kit` so adding a new one is ~50 lines; see
@@ -44,31 +44,34 @@ Each service uses `@ather/service-kit` so adding a new one is ~50 lines; see
 
 ## Quickstart
 
-Requires **Node 20+** and **npm 10+** (and Docker if you want local Postgres/Redis).
+Requires **Node 20+** and **pnpm 9+** (and Docker if you want local Postgres/Redis).
 
 ```bash
+# One-time: enable corepack so the `packageManager` field auto-installs pnpm
+corepack enable
+
 # Install all workspaces
-npm install
+pnpm install
 
 # Optional: seed your local env from the aggregated example
 cp .env.example .env
 
-# Build everything
-npm run build
+# Build everything (turbo, cached)
+pnpm turbo run build
 
 # Typecheck everything
-npm run typecheck
+pnpm turbo run typecheck
 
 # Run all tests
-npm run test
+pnpm turbo run test
 
 # Bring up local Postgres + Redis (optional for Phase 0; required from Phase 1)
-npm run infra:up
+pnpm infra:up
 
 # Run a service in dev mode
-npm run dev:auth        # http://localhost:4001
-npm run dev:profile     # http://localhost:4002
-npm run dev:web         # http://localhost:3000
+pnpm dev:auth        # http://localhost:4001
+pnpm dev:profile     # http://localhost:4002
+pnpm dev:web         # http://localhost:3000
 ```
 
 ### Android (Capacitor) + web static artifacts
@@ -81,17 +84,18 @@ Build commands:
 
 ```bash
 # Build Next.js static export for mobile and sync to Android project
-npm --workspace @ather/web run build:mobile
+pnpm --filter @ather/web run build:mobile
 
 # Build APKs (debug + unsigned release)
-npm --workspace @ather/web run android:apk:debug
-npm --workspace @ather/web run android:apk:release
+pnpm --filter @ather/web run android:apk:debug
+pnpm --filter @ather/web run android:apk:release
 
 # Build unsigned release AAB
-npm --workspace @ather/web run android:aab:release
+pnpm --filter @ather/web run android:aab:release
 ```
 
-CI workflow `.github/workflows/web-android-artifacts.yml` uploads:
+The web + Android artifacts are produced by the `ci.yml` workflow's
+`web-and-android-artifacts` job, which uploads:
 - `web-static-out` (from `apps/web/out`)
 - `android-apk-aab-unsigned` (debug APK, unsigned release APK, unsigned release AAB)
 
