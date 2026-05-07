@@ -18,9 +18,9 @@ the [roadmap](./roadmap.md).
 | 1 | search              | `services/search-service`              | 4010 | Built | `/search` (substring index over users + posts) |
 | 1 | moderation          | `services/moderation-service`          | 4011 | Built | `/moderation/*` (classify, report, queue) |
 | 1 | ai-assistant        | `services/ai-assistant-service`        | 4012 | Built | `/ai/*` (chat SSE, summarize, suggest-reply, generate-caption, quota) |
-| 2 | reels               | `services/post-service`               | 4020 | Built | `/reels/*` (CRUD, list) |
-| 2 | stories             | `services/post-service`             | 4021 | Built | `/stories/*` (create, active, by-author) |
-| 2 | comments            | `services/post-service`            | 4022 | Built | `/comments/*` (create, by-post, delete) |
+| 2 | reels               | `services/post-service`                | 4004 | Built | `/reels/*` (CRUD, list — consolidated into post-service) |
+| 2 | stories             | `services/post-service`                | 4004 | Built | `/stories/*` (create, active, by-author — consolidated into post-service) |
+| 2 | comments            | `services/post-service`                | 4004 | Built | `/comments/*` (create, by-post, delete — consolidated into post-service) |
 | 2 | communities         | `services/communities-service`         | 4023 | Built | `/communities/*` (create, by-slug, join, members, role) |
 | 2 | groups              | `services/groups-service`              | 4024 | Built | `/groups/*` (create, get, add member) |
 | 2 | ranking             | `services/ranking-service`             | 4025 | Built | `/ranking/score` (linear reranker stub) |

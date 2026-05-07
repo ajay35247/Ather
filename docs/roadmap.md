@@ -64,9 +64,9 @@ the BFF in `apps/api`. Per-service surface in
 
 Media + community — 8 additional services with the same conventions.
 
-- [x] `services/post-service` (4020) — short-form video CRUD + list.
-- [x] `services/post-service` (4021) — create / active / by-author.
-- [x] `services/post-service` (4022) — create / by-post / delete.
+- [x] `services/post-service` (4004) — short-form video CRUD + list (`/reels/*`, consolidated into post-service).
+- [x] `services/post-service` (4004) — story create / active / by-author (`/stories/*`, consolidated into post-service).
+- [x] `services/post-service` (4004) — comment create / by-post / delete (`/comments/*`, consolidated into post-service).
 - [x] `services/communities-service` (4023) — create / by-slug / join / members / role.
 - [x] `services/groups-service` (4024) — create / get / add member.
 - [x] `services/ranking-service` (4025) — linear reranker stub.
