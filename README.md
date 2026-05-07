@@ -78,7 +78,7 @@ pnpm dev:web         # http://localhost:3000
 
 Android app wrapper is configured in `apps/web` with:
 - App ID: `com.omniverse.app`
-- App Name: `omniverse`
+- App Name: `Omniverse`
 
 Build commands:
 

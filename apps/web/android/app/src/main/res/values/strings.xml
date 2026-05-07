@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">omniverse</string>
-    <string name="title_activity_main">omniverse</string>
+    <string name="app_name">Omniverse</string>
+    <string name="title_activity_main">Omniverse</string>
     <string name="package_name">com.omniverse.app</string>
     <string name="custom_url_scheme">com.omniverse.app</string>
 </resources>
