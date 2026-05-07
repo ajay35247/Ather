@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Auto-Backup rules for API <= 30.
+    Used by android:fullBackupContent in AndroidManifest.xml.
+
+    Strategy: include nothing by default (no <include>), then explicitly
+    exclude any storage that could hold auth tokens, session cookies, or
+    other sensitive state. Capacitor's WebView keeps localStorage,
+    IndexedDB, and cookies under the app_webview/ data directory, so it
+    is excluded in full.
+-->
+<full-backup-content>
+    <!-- WebView storage: localStorage, IndexedDB, cookies, service worker caches -->
+    <exclude domain="file" path="app_webview/" />
+
+    <!-- App-private databases (any future SQLite token/session stores) -->
+    <exclude domain="database" path="." />
+
+    <!-- SharedPreferences (any future preference-backed token stores) -->
+    <exclude domain="sharedpref" path="." />
+
+    <!-- Conventional opt-out directory for sensitive runtime files -->
+    <exclude domain="file" path="no_backup/" />
+
+    <!-- Capacitor plugin secure storage, if/when added -->
+    <exclude domain="sharedpref" path="CapacitorStorage.xml" />
+</full-backup-content>

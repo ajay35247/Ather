@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network security configuration.
+    Used by android:networkSecurityConfig in AndroidManifest.xml.
+
+    Cleartext (plain HTTP) traffic is denied app-wide. Capacitor serves
+    the bundled web app over the https:// scheme (see capacitor.config.ts
+    server.androidScheme), so loopback HTTP is not required.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
