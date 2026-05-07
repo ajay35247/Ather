@@ -82,7 +82,7 @@ flowchart LR
 - Pulling from 5 normal creators is cheap; pulling from 5,000 is N+1.
 - The 5k threshold is calibrated against the long-tail follower distribution: ~99.5% of authors are below it; the remaining 0.5% are amortized across all readers.
 
-The pure logic that decides which lane to use lives in [`services/feed/src/fanout.ts`](../services/feed/src/fanout.ts) (`planFanout`, `mergeLanes`). Tests in [`services/feed/test/fanout.test.ts`](../services/feed/test/fanout.test.ts).
+The pure logic that decides which lane to use lives in [`services/feed-service/src/fanout.ts`](../services/feed-service/src/fanout.ts) (`planFanout`, `mergeLanes`). Tests in [`services/feed-service/test/fanout.test.ts`](../services/feed-service/test/fanout.test.ts).
 
 ---
 
@@ -104,7 +104,7 @@ Score(viewer, post) =
 - `creator_quality` = clipped-z `[-2, 2]` mapped to `[0, 1]`; gated authors → 0.
 - `diversity_term` is the prompt's 5% slot; we apply it via MMR with `λ = 0.95` so a slate doesn't repeat creators or topics.
 
-Implementation in [`services/feed/src/ranker.ts`](../services/feed/src/ranker.ts) is **the exact production fallback** — the online stack uses LightGBM v1 served by Triton, with this code as the offline fallback when inference is degraded. Unit tests cover every component, the weighted sum, and the MMR penalty (see [`services/feed/test/ranker.test.ts`](../services/feed/test/ranker.test.ts)).
+Implementation in [`services/feed-service/src/ranker.ts`](../services/feed-service/src/ranker.ts) is **the exact production fallback** — the online stack uses LightGBM v1 served by Triton, with this code as the offline fallback when inference is degraded. Unit tests cover every component, the weighted sum, and the MMR penalty (see [`services/feed-service/test/ranker.test.ts`](../services/feed-service/test/ranker.test.ts)).
 
 ### 3.1 Two-stage retrieval
 
@@ -222,7 +222,7 @@ flowchart LR
     Watch -->|breach| Rollback[Auto rollback]
 ```
 
-The deploy workflow is at [`.github/workflows/deploy-feed.yml`](../.github/workflows/deploy-feed.yml). It's gated: the image is built and pushed on every merge to `main`, but the `helm upgrade` step only runs when the repo variable `DEPLOY_ENABLED == 'true'` and `KUBE_CONFIG_DATA` secret is set — so this file is safe to merge before any cluster exists.
+The deploy workflow is at [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) (with the `cd.yml` orchestrator running it on push to main). It's gated: the image is built and pushed on every merge to `main`, but the `helm upgrade` step only runs when the repo variable `DEPLOY_ENABLED == 'true'` and `KUBE_CONFIG_DATA` secret is set — so this file is safe to merge before any cluster exists.
 
 ### 8.1 AWS topology (target)
 
@@ -258,7 +258,7 @@ The ranker formula in §3 has zero outrage signal by design.
 ## 10. Roll-out plan (4 PRs)
 
 1. **This PR** — schema, ranker, fanout, pg adapter, deploy artifacts, docs.
-2. **Wire**: monolith `/api/feed` proxies to `services/feed`; Redpanda + Milvus in dev compose; OTel SDK in `service-kit`.
+2. **Wire**: monolith `/api/feed` proxies to `services/feed-service`; Redpanda + Milvus in dev compose; OTel SDK in `service-kit`.
 3. **Real signals**: `social-graph` service emits `follow.created`; embedding worker writes `posts.embedding`; ranker reads from Feast/Redis features.
 4. **Cutover**: k6 1k → 10k RPS in CI, chaos test (kill ranker → fallback verifies), KMS-wrapped email hash migration, archive deprecated service folders.
 

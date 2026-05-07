@@ -1,0 +1,12 @@
+# Auto-aligned with services/groups-service/src/index.ts (port 4024).
+# Deploy with: helm upgrade --install groups-service infra/helm/_service \
+#                -f infra/helm/values/groups-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: social
+  port: 80
+  targetPort: 4024
+
+image:
+  repository: ghcr.io/ajay35247/ather-groups-service

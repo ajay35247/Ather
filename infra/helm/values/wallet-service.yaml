@@ -1,0 +1,15 @@
+# Auto-aligned with services/wallet-service/src/index.ts (port 4030).
+# Deploy with: helm upgrade --install wallet-service infra/helm/_service \
+#                -f infra/helm/values/wallet-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: economy
+  port: 80
+  targetPort: 4030
+
+image:
+  repository: ghcr.io/ajay35247/ather-wallet-service
+
+internalSecret:
+  enabled: true

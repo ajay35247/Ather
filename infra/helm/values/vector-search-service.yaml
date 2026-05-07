@@ -1,0 +1,12 @@
+# Auto-aligned with services/vector-search-service/src/index.ts (port 4054).
+# Deploy with: helm upgrade --install vector-search-service infra/helm/_service \
+#                -f infra/helm/values/vector-search-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: ml
+  port: 80
+  targetPort: 4054
+
+image:
+  repository: ghcr.io/ajay35247/ather-vector-search-service

@@ -1,0 +1,50 @@
+name: security-scan
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+  schedule:
+    # Weekly Monday 03:00 UTC scan against the default branch.
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: pnpm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Fail the build on any high+ severity advisory in production deps.
+      - name: pnpm audit (fail on high+)
+        run: pnpm audit --audit-level=high --prod
+      # Capture the full JSON report as an artifact for triage.
+      # `|| true` here is intentional and only applies to the report dump:
+      # we already failed above on real findings; this step is advisory.
+      - name: pnpm audit (full JSON report)
+        if: always()
+        run: pnpm audit --json > pnpm-audit.json || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pnpm-audit-report
+          path: pnpm-audit.json
+          if-no-files-found: ignore
+
+  dependency-review:
+    name: GitHub Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

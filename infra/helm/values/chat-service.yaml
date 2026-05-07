@@ -1,0 +1,12 @@
+# Auto-aligned with services/chat-service/src/index.ts (port 4007).
+# Deploy with: helm upgrade --install chat-service infra/helm/_service \
+#                -f infra/helm/values/chat-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: messaging
+  port: 80
+  targetPort: 4007
+
+image:
+  repository: ghcr.io/ajay35247/ather-chat-service

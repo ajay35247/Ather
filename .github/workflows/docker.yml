@@ -1,0 +1,125 @@
+name: docker
+
+# Builds (and optionally pushes) Docker images for any service that has a
+# Dockerfile. Discovers them dynamically so adding a new service Dockerfile
+# automatically opts that service into image builds.
+#
+# Push is gated on either:
+#   - workflow_call from cd.yml with push=true, OR
+#   - workflow_dispatch with push=true, OR
+#   - push to main with relevant paths changed
+# Image registry is GHCR. Images are tagged `<short-sha>-<env>` plus the
+# environment name (`stage` / `prod`).
+
+on:
+  workflow_call:
+    inputs:
+      push:
+        type: boolean
+        default: false
+      environment:
+        type: string
+        default: stage
+  workflow_dispatch:
+    inputs:
+      push:
+        description: Push images to GHCR
+        type: boolean
+        default: false
+      environment:
+        description: Target environment tag
+        type: choice
+        options: [stage, prod]
+        default: stage
+  push:
+    branches: [main]
+    paths:
+      - 'services/**/Dockerfile'
+      - 'services/**/src/**'
+      - 'packages/service-kit/**'
+      - 'packages/shared/**'
+      - '.github/workflows/docker.yml'
+  pull_request:
+    paths:
+      - 'services/**/Dockerfile'
+      - '.github/workflows/docker.yml'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    name: discover services with Dockerfiles
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.find.outputs.services }}
+      has_any: ${{ steps.find.outputs.has_any }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: find
+        run: |
+          # Emit the list of services directories that have a Dockerfile,
+          # as a JSON array suitable for matrix expansion.
+          mapfile -t DIRS < <(find services -maxdepth 2 -name Dockerfile -printf '%h\n' | sort)
+          if [ ${#DIRS[@]} -eq 0 ]; then
+            echo "services=[]" >> "$GITHUB_OUTPUT"
+            echo "has_any=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Convert paths like "services/feed-service" → "feed-service".
+          NAMES=()
+          for d in "${DIRS[@]}"; do NAMES+=("$(basename "$d")"); done
+          JSON=$(printf '%s\n' "${NAMES[@]}" | jq -R . | jq -s -c .)
+          echo "services=${JSON}" >> "$GITHUB_OUTPUT"
+          echo "has_any=true" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: build ${{ matrix.service }}
+    needs: discover
+    if: needs.discover.outputs.has_any == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.discover.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: ${{ inputs.push == true || github.event_name == 'push' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute tags
+        id: meta
+        run: |
+          SHORT="$(echo "${{ github.sha }}" | cut -c1-7)"
+          ENV_TAG="${{ inputs.environment || 'stage' }}"
+          REPO="ghcr.io/${{ github.repository_owner }}/ather-${{ matrix.service }}"
+          {
+            echo "image=${REPO}"
+            echo "tag_sha=${REPO}:${SHORT}-${ENV_TAG}"
+            echo "tag_env=${REPO}:${ENV_TAG}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build (and push if requested)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ inputs.push == true || github.event_name == 'push' }}
+          tags: |
+            ${{ steps.meta.outputs.tag_sha }}
+            ${{ steps.meta.outputs.tag_env }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

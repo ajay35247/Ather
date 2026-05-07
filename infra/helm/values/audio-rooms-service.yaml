@@ -1,0 +1,12 @@
+# Auto-aligned with services/audio-rooms-service/src/index.ts (port 4037).
+# Deploy with: helm upgrade --install audio-rooms-service infra/helm/_service \
+#                -f infra/helm/values/audio-rooms-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: content
+  port: 80
+  targetPort: 4037
+
+image:
+  repository: ghcr.io/ajay35247/ather-audio-rooms-service

@@ -1,0 +1,12 @@
+# Auto-aligned with services/translation-service/src/index.ts (port 4056).
+# Deploy with: helm upgrade --install translation-service infra/helm/_service \
+#                -f infra/helm/values/translation-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: ml
+  port: 80
+  targetPort: 4056
+
+image:
+  repository: ghcr.io/ajay35247/ather-translation-service

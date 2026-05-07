@@ -1,0 +1,23 @@
+# Auto-aligned with services/feed-service/src/index.ts (port 4005).
+# Deploy with: helm upgrade --install feed-service infra/helm/_service \
+#                -f infra/helm/values/feed-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: content
+  port: 80
+  targetPort: 4005
+
+image:
+  repository: ghcr.io/ajay35247/ather-feed-service
+
+replicaCount: 3
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 50
+  targetCPUUtilizationPercentage: 65
+  targetMemoryUtilizationPercentage: 75
+pdb:
+  enabled: true
+  minAvailable: 2
