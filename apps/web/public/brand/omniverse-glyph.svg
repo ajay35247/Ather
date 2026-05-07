@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Omniverse glyph mark.
+
+    Design: a stroked ring (the "omni" — encompassing everything) with a
+    single solid node offset to the upper-right (the "verse" — a particular
+    world within that whole). Reads cleanly at 16px through 1024px.
+
+    24x24 viewBox so it composes 1:1 with lucide / heroicons sizing.
+
+    Geometry:
+      - ring centered at (12, 12), radius 9, stroke 2
+      - node centered at (18.6, 5.4), radius 2.4
+      - node center sits on the 45° axis at distance ≈ 9.3 from the ring
+        center, putting it just outside the ring edge — visually "in orbit"
+        without overlap.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" role="img" aria-label="Omniverse">
+    <title>Omniverse</title>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+    <circle cx="18.6" cy="5.4" r="2.4" fill="currentColor" />
+</svg>
