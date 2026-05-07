@@ -18,16 +18,16 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: feed
+  name: feed-service
   namespace: ather
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: feed
+  name: feed-service
   namespace: ather
   labels:
-    app: feed
+    app: feed-service
     plane: content
 spec:
   replicas: 3
@@ -39,18 +39,18 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: feed
+      app: feed-service
   template:
     metadata:
       labels:
-        app: feed
+        app: feed-service
         plane: content
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '4005'
         prometheus.io/path: '/metrics'
     spec:
-      serviceAccountName: feed
+      serviceAccountName: feed-service
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
@@ -63,14 +63,14 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app: feed
+              app: feed-service
       containers:
-        - name: feed
+        - name: feed-service
           # Pinned placeholder — the deploy workflow rewrites this to
-          # `<sha7>-<env>` (see .github/workflows/deploy-feed.yml). Never
+          # `<sha7>-<env>` (see .github/workflows/deploy.yml). Never
           # use `:latest` in production: image pulls become non-deterministic
           # and a rollback can't reach a known-good digest.
-          image: ghcr.io/ajay35247/ather-feed:0.1.0
+          image: ghcr.io/ajay35247/ather-feed-service:0.1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4005
@@ -83,17 +83,17 @@ spec:
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: feed-secrets
+                  name: feed-service-secrets
                   key: jwt-secret
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: feed-secrets
+                  name: feed-service-secrets
                   key: database-url
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
-                  name: feed-secrets
+                  name: feed-service-secrets
                   key: redis-url
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://otel-collector.observability.svc.cluster.local:4318
@@ -133,12 +133,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: feed
+  name: feed-service
   namespace: ather
-  labels: { app: feed }
+  labels: { app: feed-service }
 spec:
   type: ClusterIP
-  selector: { app: feed }
+  selector: { app: feed-service }
   ports:
     - name: http
       port: 80
@@ -147,23 +147,23 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: feed
+  name: feed-service
   namespace: ather
 spec:
   minAvailable: 2
   selector:
-    matchLabels: { app: feed }
+    matchLabels: { app: feed-service }
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: feed
+  name: feed-service
   namespace: ather
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: feed
+    name: feed-service
   minReplicas: 3
   maxReplicas: 50
   behavior:
@@ -184,11 +184,11 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: feed
+  name: feed-service
   namespace: ather
 spec:
   podSelector:
-    matchLabels: { app: feed }
+    matchLabels: { app: feed-service }
   policyTypes: [Ingress, Egress]
   ingress:
     - from:

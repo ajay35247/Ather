@@ -310,7 +310,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/ads:
+  services/ads-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -368,7 +368,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/agent-orchestrator:
+  services/agent-orchestrator-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -426,7 +426,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/ai-assistant:
+  services/ai-assistant-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -484,7 +484,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/analytics:
+  services/analytics-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -542,7 +542,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/audio-rooms:
+  services/audio-rooms-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -600,7 +600,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/auth:
+  services/auth-service:
     dependencies:
       '@ather/shared':
         specifier: workspace:*
@@ -679,7 +679,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/bot-platform:
+  services/bot-platform-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -737,7 +737,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/chat:
+  services/chat-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -795,7 +795,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/comments:
+  services/communities-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -853,7 +853,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/communities:
+  services/content-events-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -911,7 +911,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/content-events:
+  services/creator-studio-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -969,7 +969,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/creator-studio:
+  services/feed-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1027,7 +1027,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/feed:
+  services/groups-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1085,7 +1085,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/groups:
+  services/knowledge-graph-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1143,7 +1143,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/knowledge-graph:
+  services/ledger-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1201,7 +1201,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/ledger:
+  services/live-stream-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1259,7 +1259,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/live-stream:
+  services/media-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1317,7 +1317,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/media:
+  services/mini-app-runtime-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1375,7 +1375,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/mini-app-runtime:
+  services/moderation-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1433,7 +1433,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/moderation:
+  services/notification-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1491,7 +1491,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/notification:
+  services/payments-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1549,7 +1549,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/payments:
+  services/plugin-marketplace-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1607,7 +1607,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/plugin-marketplace:
+  services/post-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1665,7 +1665,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/post:
+  services/presence-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1723,65 +1723,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/presence:
-    dependencies:
-      '@ather/service-kit':
-        specifier: workspace:*
-        version: link:../../packages/service-kit
-      '@ather/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
-      express:
-        specifier: 4.21.2
-        version: 4.21.2
-      uuid:
-        specifier: 9.0.1
-        version: 9.0.1
-      zod:
-        specifier: 3.23.8
-        version: 3.23.8
-    devDependencies:
-      '@types/express':
-        specifier: 4.17.21
-        version: 4.17.21
-      '@types/jest':
-        specifier: 29.5.12
-        version: 29.5.12
-      '@types/jsonwebtoken':
-        specifier: 9.0.6
-        version: 9.0.6
-      '@types/node':
-        specifier: 20.12.12
-        version: 20.12.12
-      '@types/supertest':
-        specifier: 6.0.2
-        version: 6.0.2
-      '@types/uuid':
-        specifier: 9.0.8
-        version: 9.0.8
-      jest:
-        specifier: 29.7.0
-        version: 29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))
-      jsonwebtoken:
-        specifier: 9.0.2
-        version: 9.0.2
-      supertest:
-        specifier: 7.0.0
-        version: 7.0.0
-      ts-jest:
-        specifier: 29.1.4
-        version: 29.1.4(@babel/core@7.29.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.29.0))(jest@29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5)))(typescript@5.4.5)
-      ts-node-dev:
-        specifier: 2.0.0
-        version: 2.0.0(@types/node@20.12.12)(typescript@5.4.5)
-      typescript:
-        specifier: 5.4.5
-        version: 5.4.5
-
-  services/profile:
+  services/profile-service:
     dependencies:
       '@ather/shared':
         specifier: workspace:*
@@ -1848,7 +1790,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/ranking:
+  services/ranking-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1906,7 +1848,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/recommendations:
+  services/recommendations-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -1964,7 +1906,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/reels:
+  services/search-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -2022,7 +1964,59 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/search:
+  services/social-graph-service:
+    dependencies:
+      '@ather/service-kit':
+        specifier: workspace:*
+        version: link:../../packages/service-kit
+      '@ather/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      dotenv:
+        specifier: 16.4.5
+        version: 16.4.5
+      express:
+        specifier: 4.21.2
+        version: 4.21.2
+      zod:
+        specifier: 3.23.8
+        version: 3.23.8
+    devDependencies:
+      '@types/express':
+        specifier: 4.17.21
+        version: 4.17.21
+      '@types/jest':
+        specifier: 29.5.12
+        version: 29.5.12
+      '@types/jsonwebtoken':
+        specifier: 9.0.6
+        version: 9.0.6
+      '@types/node':
+        specifier: 20.12.12
+        version: 20.12.12
+      '@types/supertest':
+        specifier: 6.0.2
+        version: 6.0.2
+      jest:
+        specifier: 29.7.0
+        version: 29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))
+      jsonwebtoken:
+        specifier: 9.0.2
+        version: 9.0.2
+      supertest:
+        specifier: 7.0.0
+        version: 7.0.0
+      ts-jest:
+        specifier: 29.1.4
+        version: 29.1.4(@babel/core@7.29.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.29.0))(jest@29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5)))(typescript@5.4.5)
+      ts-node-dev:
+        specifier: 2.0.0
+        version: 2.0.0(@types/node@20.12.12)(typescript@5.4.5)
+      typescript:
+        specifier: 5.4.5
+        version: 5.4.5
+
+  services/subscriptions-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -2080,59 +2074,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/social-graph:
-    dependencies:
-      '@ather/service-kit':
-        specifier: workspace:*
-        version: link:../../packages/service-kit
-      '@ather/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
-      express:
-        specifier: 4.21.2
-        version: 4.21.2
-      zod:
-        specifier: 3.23.8
-        version: 3.23.8
-    devDependencies:
-      '@types/express':
-        specifier: 4.17.21
-        version: 4.17.21
-      '@types/jest':
-        specifier: 29.5.12
-        version: 29.5.12
-      '@types/jsonwebtoken':
-        specifier: 9.0.6
-        version: 9.0.6
-      '@types/node':
-        specifier: 20.12.12
-        version: 20.12.12
-      '@types/supertest':
-        specifier: 6.0.2
-        version: 6.0.2
-      jest:
-        specifier: 29.7.0
-        version: 29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))
-      jsonwebtoken:
-        specifier: 9.0.2
-        version: 9.0.2
-      supertest:
-        specifier: 7.0.0
-        version: 7.0.0
-      ts-jest:
-        specifier: 29.1.4
-        version: 29.1.4(@babel/core@7.29.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.29.0))(jest@29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5)))(typescript@5.4.5)
-      ts-node-dev:
-        specifier: 2.0.0
-        version: 2.0.0(@types/node@20.12.12)(typescript@5.4.5)
-      typescript:
-        specifier: 5.4.5
-        version: 5.4.5
-
-  services/stories:
+  services/tips-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -2190,7 +2132,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/subscriptions:
+  services/translation-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -2248,7 +2190,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/tips:
+  services/vector-search-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -2306,123 +2248,7 @@ importers:
         specifier: 5.4.5
         version: 5.4.5
 
-  services/translation:
-    dependencies:
-      '@ather/service-kit':
-        specifier: workspace:*
-        version: link:../../packages/service-kit
-      '@ather/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
-      express:
-        specifier: 4.21.2
-        version: 4.21.2
-      uuid:
-        specifier: 9.0.1
-        version: 9.0.1
-      zod:
-        specifier: 3.23.8
-        version: 3.23.8
-    devDependencies:
-      '@types/express':
-        specifier: 4.17.21
-        version: 4.17.21
-      '@types/jest':
-        specifier: 29.5.12
-        version: 29.5.12
-      '@types/jsonwebtoken':
-        specifier: 9.0.6
-        version: 9.0.6
-      '@types/node':
-        specifier: 20.12.12
-        version: 20.12.12
-      '@types/supertest':
-        specifier: 6.0.2
-        version: 6.0.2
-      '@types/uuid':
-        specifier: 9.0.8
-        version: 9.0.8
-      jest:
-        specifier: 29.7.0
-        version: 29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))
-      jsonwebtoken:
-        specifier: 9.0.2
-        version: 9.0.2
-      supertest:
-        specifier: 7.0.0
-        version: 7.0.0
-      ts-jest:
-        specifier: 29.1.4
-        version: 29.1.4(@babel/core@7.29.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.29.0))(jest@29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5)))(typescript@5.4.5)
-      ts-node-dev:
-        specifier: 2.0.0
-        version: 2.0.0(@types/node@20.12.12)(typescript@5.4.5)
-      typescript:
-        specifier: 5.4.5
-        version: 5.4.5
-
-  services/vector-search:
-    dependencies:
-      '@ather/service-kit':
-        specifier: workspace:*
-        version: link:../../packages/service-kit
-      '@ather/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
-      express:
-        specifier: 4.21.2
-        version: 4.21.2
-      uuid:
-        specifier: 9.0.1
-        version: 9.0.1
-      zod:
-        specifier: 3.23.8
-        version: 3.23.8
-    devDependencies:
-      '@types/express':
-        specifier: 4.17.21
-        version: 4.17.21
-      '@types/jest':
-        specifier: 29.5.12
-        version: 29.5.12
-      '@types/jsonwebtoken':
-        specifier: 9.0.6
-        version: 9.0.6
-      '@types/node':
-        specifier: 20.12.12
-        version: 20.12.12
-      '@types/supertest':
-        specifier: 6.0.2
-        version: 6.0.2
-      '@types/uuid':
-        specifier: 9.0.8
-        version: 9.0.8
-      jest:
-        specifier: 29.7.0
-        version: 29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5))
-      jsonwebtoken:
-        specifier: 9.0.2
-        version: 9.0.2
-      supertest:
-        specifier: 7.0.0
-        version: 7.0.0
-      ts-jest:
-        specifier: 29.1.4
-        version: 29.1.4(@babel/core@7.29.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.29.0))(jest@29.7.0(@types/node@20.12.12)(ts-node@10.9.2(@types/node@20.12.12)(typescript@5.4.5)))(typescript@5.4.5)
-      ts-node-dev:
-        specifier: 2.0.0
-        version: 2.0.0(@types/node@20.12.12)(typescript@5.4.5)
-      typescript:
-        specifier: 5.4.5
-        version: 5.4.5
-
-  services/wallet:
+  services/wallet-service:
     dependencies:
       '@ather/service-kit':
         specifier: workspace:*
@@ -8023,8 +7849,8 @@ snapshots:
       '@typescript-eslint/parser': 8.59.2(eslint@8.57.1)(typescript@5.4.5)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.5(eslint@8.57.1)
       eslint-plugin-react-hooks: 5.2.0(eslint@8.57.1)
@@ -8043,7 +7869,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.3
@@ -8054,22 +7880,22 @@ snapshots:
       tinyglobby: 0.2.16
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.59.2(eslint@8.57.1)(typescript@5.4.5)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint@8.57.1))(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -8080,7 +7906,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@8.57.1)(typescript@5.4.5))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
       hasown: 2.0.3
       is-core-module: 2.16.2
       is-glob: 4.0.3

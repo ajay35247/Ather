@@ -71,7 +71,7 @@ jobs:
             echo "has_any=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # Convert paths like "services/feed" → "feed".
+          # Convert paths like "services/feed-service" → "feed-service".
           NAMES=()
           for d in "${DIRS[@]}"; do NAMES+=("$(basename "$d")"); done
           JSON=$(printf '%s\n' "${NAMES[@]}" | jq -R . | jq -s -c .)

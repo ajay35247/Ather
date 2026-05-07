@@ -127,7 +127,7 @@ A 60-second smoke test against the auth service:
 
 ```bash
 # Terminal 1 — start auth service
-cp services/auth/.env.example services/auth/.env
+cp services/auth-service/.env.example services/auth-service/.env
 npm run dev:auth
 
 # Terminal 2 — exercise it

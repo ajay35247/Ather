@@ -1,0 +1,12 @@
+# Auto-aligned with services/creator-studio-service/src/index.ts (port 4035).
+# Deploy with: helm upgrade --install creator-studio-service infra/helm/_service \
+#                -f infra/helm/values/creator-studio-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: economy
+  port: 80
+  targetPort: 4035
+
+image:
+  repository: ghcr.io/ajay35247/ather-creator-studio-service

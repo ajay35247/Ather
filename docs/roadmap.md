@@ -25,8 +25,8 @@ The following items from the original prompt are explicitly **not** in scope and
 
 - [x] Monorepo scaffolded (npm workspaces, TS base config).
 - [x] `apps/web` Next.js skeleton.
-- [x] `services/auth` Express + TS skeleton with register/login/refresh/me + tests.
-- [x] `services/profile` Express + TS skeleton with me/update + tests.
+- [x] `services/auth-service` Express + TS skeleton with register/login/refresh/me + tests.
+- [x] `services/profile-service` Express + TS skeleton with me/update + tests.
 - [x] `packages/shared` shared types.
 - [x] `infra/docker-compose.yml` for local Postgres + Redis.
 - [x] CI: typecheck, lint-light, build, tests.
@@ -38,19 +38,19 @@ Core loop MVP — all 10 services scaffolded, tested, and reachable from
 the BFF in `apps/api`. Per-service surface in
 [`docs/services.md`](./services.md).
 
-- [x] `services/social-graph` (4003) — follow / unfollow / block / followers / following.
-- [x] `services/post` (4004) — CRUD + reactions, URL allowlist on media.
-- [x] `services/feed` (4005) — for_you / following / chronological with the
+- [x] `services/social-graph-service` (4003) — follow / unfollow / block / followers / following.
+- [x] `services/post-service` (4004) — CRUD + reactions, URL allowlist on media.
+- [x] `services/feed-service` (4005) — for_you / following / chronological with the
       production-grade ranker pillar (see [`docs/feed-pillar.md`](./feed-pillar.md)).
-- [x] `services/media` (4006) — upload-url / finalize / by-id.
-- [x] `services/chat` (4007) — conversations + messages, **server stores
+- [x] `services/media-service` (4006) — upload-url / finalize / by-id.
+- [x] `services/chat-service` (4007) — conversations + messages, **server stores
       ciphertext only** (Signal-style E2EE).
-- [x] `services/presence` (4008) — heartbeat / get / bulk.
-- [x] `services/notification` (4009) — list / unread-count / mark-read,
+- [x] `services/presence-service` (4008) — heartbeat / get / bulk.
+- [x] `services/notification-service` (4009) — list / unread-count / mark-read,
       internal push gated by `x-internal-secret`.
-- [x] `services/search` (4010) — substring index over users + posts.
-- [x] `services/moderation` (4011) — classify / report / queue.
-- [x] `services/ai-assistant` (4012) — chat (SSE) / summarize / suggest-reply
+- [x] `services/search-service` (4010) — substring index over users + posts.
+- [x] `services/moderation-service` (4011) — classify / report / queue.
+- [x] `services/ai-assistant-service` (4012) — chat (SSE) / summarize / suggest-reply
       / generate-caption with quota.
 - [x] **DB**: production schema for the feed pillar
       (`infra/postgres/migrations/0001_feed_pillar.sql`) +
@@ -64,14 +64,14 @@ the BFF in `apps/api`. Per-service surface in
 
 Media + community — 8 additional services with the same conventions.
 
-- [x] `services/reels` (4020) — short-form video CRUD + list.
-- [x] `services/stories` (4021) — create / active / by-author.
-- [x] `services/comments` (4022) — create / by-post / delete.
-- [x] `services/communities` (4023) — create / by-slug / join / members / role.
-- [x] `services/groups` (4024) — create / get / add member.
-- [x] `services/ranking` (4025) — linear reranker stub.
-- [x] `services/recommendations` (4026) — cosine-based two-tower stub.
-- [x] `services/content-events` (4027) — Kafka shim, internal-only writes.
+- [x] `services/post-service` (4020) — short-form video CRUD + list.
+- [x] `services/post-service` (4021) — create / active / by-author.
+- [x] `services/post-service` (4022) — create / by-post / delete.
+- [x] `services/communities-service` (4023) — create / by-slug / join / members / role.
+- [x] `services/groups-service` (4024) — create / get / add member.
+- [x] `services/ranking-service` (4025) — linear reranker stub.
+- [x] `services/recommendations-service` (4026) — cosine-based two-tower stub.
+- [x] `services/content-events-service` (4027) — Kafka shim, internal-only writes.
 - [x] **DB**: production schema for communities, groups, search, KG, i18n
       (`infra/postgres/migrations/0004_platform.sql`).
 
@@ -80,16 +80,16 @@ Media + community — 8 additional services with the same conventions.
 Monetization — 10 services and the **double-entry ledger** as the source
 of truth for all money in the system.
 
-- [x] `services/wallet` (4030) — read projection, internal-only writes.
-- [x] `services/payments` (4031) — intents + webhooks/confirm.
-- [x] `services/subscriptions` (4032) — subscribe / cancel / me.
-- [x] `services/tips` (4033) — send / received.
-- [x] `services/ads` (4034) — campaigns CRUD + status.
-- [x] `services/creator-studio` (4035) — me.
-- [x] `services/live-stream` (4036) — start / end / active.
-- [x] `services/audio-rooms` (4037) — create / join / close / open.
-- [x] `services/analytics` (4038) — track / count.
-- [x] `services/ledger` (4039) — accounts / entries / balance / health-check
+- [x] `services/wallet-service` (4030) — read projection, internal-only writes.
+- [x] `services/payments-service` (4031) — intents + webhooks/confirm.
+- [x] `services/subscriptions-service` (4032) — subscribe / cancel / me.
+- [x] `services/tips-service` (4033) — send / received.
+- [x] `services/ads-service` (4034) — campaigns CRUD + status.
+- [x] `services/creator-studio-service` (4035) — me.
+- [x] `services/live-stream-service` (4036) — start / end / active.
+- [x] `services/audio-rooms-service` (4037) — create / join / close / open.
+- [x] `services/analytics-service` (4038) — track / count.
+- [x] `services/ledger-service` (4039) — accounts / entries / balance / health-check
       enforcing the double-entry invariant in code **and** in the DB
       (deferred constraint trigger; see `0003_monetization.sql`).
 - [x] **DB**: production schema for wallet, payments, subscriptions, tips,
@@ -100,15 +100,15 @@ of truth for all money in the system.
 
 Ecosystem — 7 services with strict allowlists / sandboxes.
 
-- [x] `services/mini-app-runtime` (4050) — register / approve / approved
+- [x] `services/mini-app-runtime-service` (4050) — register / approve / approved
       with a hard capability allowlist (`ALLOWED_CAPS`).
-- [x] `services/plugin-marketplace` (4051) — list / install / search.
-- [x] `services/bot-platform` (4052) — register / by-handle, **HTTPS-only
+- [x] `services/plugin-marketplace-service` (4051) — list / install / search.
+- [x] `services/bot-platform-service` (4052) — register / by-handle, **HTTPS-only
       webhooks** enforced both in code and via a `CHECK` constraint.
-- [x] `services/knowledge-graph` (4053) — entities / edges / neighbors.
-- [x] `services/vector-search` (4054) — upsert / query.
-- [x] `services/agent-orchestrator` (4055) — plans, tool allowlist enforced.
-- [x] `services/translation` (4056) — translate stub backed by `@ather/i18n`.
+- [x] `services/knowledge-graph-service` (4053) — entities / edges / neighbors.
+- [x] `services/vector-search-service` (4054) — upsert / query.
+- [x] `services/agent-orchestrator-service` (4055) — plans, tool allowlist enforced.
+- [x] `services/translation-service` (4056) — translate stub backed by `@ather/i18n`.
 - [x] **Generic Helm chart** at `infra/helm/_service/` + per-service values
       under `infra/helm/values/<service>.yaml` (37 files, all render via
       `helm template`); generic deploy workflow at

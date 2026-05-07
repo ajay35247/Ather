@@ -1,0 +1,12 @@
+# Auto-aligned with services/live-stream-service/src/index.ts (port 4036).
+# Deploy with: helm upgrade --install live-stream-service infra/helm/_service \
+#                -f infra/helm/values/live-stream-service.yaml \
+#                --set image.tag=$GITHUB_SHA
+
+service:
+  plane: content
+  port: 80
+  targetPort: 4036
+
+image:
+  repository: ghcr.io/ajay35247/ather-live-stream-service

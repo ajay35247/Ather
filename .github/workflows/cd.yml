@@ -38,10 +38,10 @@ jobs:
         with:
           filters: |
             feed:
-              - 'services/feed/**'
+              - 'services/feed-service/**'
               - 'packages/service-kit/**'
               - 'packages/shared/**'
-              - 'infra/helm/values/feed.yaml'
+              - 'infra/helm/values/feed-service.yaml'
               - 'infra/helm/_service/**'
 
   build-images:
@@ -53,10 +53,10 @@ jobs:
 
   deploy-feed:
     needs: [detect-changes, build-images]
-    # Only deploy feed when its sources actually changed (or on manual dispatch).
+    # Only deploy feed-service when its sources actually changed (or on manual dispatch).
     if: needs.detect-changes.outputs.feed == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/deploy.yml
     with:
-      service: feed
+      service: feed-service
       environment: ${{ inputs.environment || 'stage' }}
     secrets: inherit
