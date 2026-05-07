@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
+const isMobileExport = process.env.NEXT_OUTPUT === 'export';
+
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  experimental: {
-    typedRoutes: false,
-  },
+  ...(isMobileExport && { output: 'export' }),
+  trailingSlash: isMobileExport,
+  typedRoutes: false,
   images: {
+    unoptimized: isMobileExport,
     domains: ['api.dicebear.com', 'picsum.photos', 'images.unsplash.com'],
   },
   env: {
