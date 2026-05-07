@@ -15,7 +15,8 @@ lives in [`/docs`](./docs). The full per-service inventory is in [`docs/services
 ```
 ather/
 ├── apps/
-│   └── web/                 # Next.js 15 App Router — feed, auth, profile shell
+│   ├── web/                 # Next.js 15 App Router — feed, auth, profile shell
+│   └── api/                 # Express + TS — Core Loop API (identity, feed, messaging, AI, notifications)
 ├── packages/
 │   ├── shared/              # Shared TS types & API contracts
 │   └── service-kit/         # Shared Express factory: app, auth, rate-limits, errors, pagination
@@ -48,6 +49,9 @@ Requires **Node 20+** and **npm 10+** (and Docker if you want local Postgres/Red
 ```bash
 # Install all workspaces
 npm install
+
+# Optional: seed your local env from the aggregated example
+cp .env.example .env
 
 # Build everything
 npm run build
@@ -159,9 +163,9 @@ self-deploying systems, shadow-network contact scraping, on-platform investment 
 
 ## License
 
-TBD. Until a license is added, all rights reserved by the repository owner. The
-extended product reference below reflects the unified-social-platform draft and
-is preserved for context; license and stack details there are non-binding.
+Ather is released under the [MIT License](./LICENSE). The extended product
+reference below reflects the unified-social-platform draft and is preserved
+for context; stack details there are non-binding.
 
 ---
 
@@ -588,7 +592,7 @@ Contributions are welcome! Please read our contributing guidelines and open a PR
 
 ## 📄 License
 
-MIT License
+Released under the [MIT License](./LICENSE).
 
 ---
 
