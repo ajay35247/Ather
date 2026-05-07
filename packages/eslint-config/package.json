@@ -1,0 +1,10 @@
+{
+  "name": "@ather/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "description": "Shared ESLint config for Ather (scaffold)",
+  "scripts": {
+    "test": "echo 'no tests'"
+  }
+}
