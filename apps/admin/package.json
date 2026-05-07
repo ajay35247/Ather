@@ -2,7 +2,7 @@
   "name": "@ather/admin",
   "version": "0.1.0",
   "private": true,
-  "description": "Ather admin dashboard — scaffold",
+  "description": "Ather admin dashboard \u2014 scaffold",
   "scripts": {
     "build": "echo 'admin: scaffold; no build yet'",
     "typecheck": "echo 'admin: scaffold; no typecheck yet'",

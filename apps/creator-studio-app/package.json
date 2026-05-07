@@ -2,7 +2,7 @@
   "name": "@ather/creator-studio-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Creator Studio frontend (separate from services/creator-studio backend) — scaffold",
+  "description": "Creator Studio frontend (separate from services/creator-studio backend) \u2014 scaffold",
   "scripts": {
     "build": "echo 'creator-studio-app: scaffold; no build yet'",
     "typecheck": "echo 'creator-studio-app: scaffold; no typecheck yet'",

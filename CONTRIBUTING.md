@@ -4,15 +4,19 @@ Thanks for your interest in contributing!
 
 ## Development setup
 
+This monorepo uses **pnpm workspaces** and **Turborepo**.
+
 ```bash
-npm install        # install all workspaces
-npm run dev        # run web (3000) + api (4000) concurrently
-npm run typecheck  # typecheck every workspace
-npm run test       # run all workspace tests
+corepack enable                       # one-time, picks pnpm version from package.json
+pnpm install                          # install all workspaces
+pnpm dev                              # run web (3000) + api (4000) concurrently
+pnpm turbo run typecheck              # typecheck every workspace (cached)
+pnpm turbo run build                  # build every workspace (cached)
+pnpm turbo run test                   # run all workspace tests (cached)
+pnpm --filter @ather/post-service run dev   # work on a single service
 ```
 
-This is a monorepo using **npm workspaces**. Apps live in `apps/`, backend
-services in `services/`, and shared libraries in `packages/`.
+`pnpm-workspace.yaml` enumerates workspace globs; `turbo.json` defines the task graph; `.npmrc` keeps hoisting compatible with the previous npm-workspaces layout.
 
 ## Branching & PRs
 

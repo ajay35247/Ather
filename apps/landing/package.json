@@ -2,7 +2,7 @@
   "name": "@ather/landing",
   "version": "0.1.0",
   "private": true,
-  "description": "Ather marketing landing site — scaffold",
+  "description": "Ather marketing landing site \u2014 scaffold",
   "scripts": {
     "build": "echo 'landing: scaffold; no build yet'",
     "typecheck": "echo 'landing: scaffold; no typecheck yet'",

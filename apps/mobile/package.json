@@ -2,7 +2,7 @@
   "name": "@ather/mobile",
   "version": "0.1.0",
   "private": true,
-  "description": "Ather mobile app (React Native / Expo) — scaffold",
+  "description": "Ather mobile app (React Native / Expo) \u2014 scaffold",
   "scripts": {
     "build": "echo 'mobile: scaffold; no build yet'",
     "typecheck": "echo 'mobile: scaffold; no typecheck yet'",
