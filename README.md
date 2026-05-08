@@ -246,6 +246,74 @@ Ather/
 
 ---
 
+## 🚀 Single-project deployment (Vercel / Railway)
+
+This repo is configured to deploy as **one project** on Vercel and Railway,
+even though it's a pnpm monorepo containing many workspaces. The single
+deployable unit is the Next.js frontend (`@ather/web` in `apps/web/`), which
+already includes its own App Router API route handlers under
+`apps/web/src/app/api/` (auth, profile).
+
+### Vercel
+
+There is exactly one `vercel.json` at the repo root, which is the only file
+Vercel reads when the repo is imported as a project:
+
+```jsonc
+// /vercel.json
+{
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter @ather/web build",
+  "outputDirectory": "apps/web/.next"
+}
+```
+
+To import on Vercel:
+
+1. **New Project → Import** `ajay35247/Ather`.
+2. **Root Directory:** leave as the repo root (`.`). Do **not** change it to
+   `apps/web` — the root config builds `@ather/web` from the workspace.
+3. **Framework Preset:** Next.js (auto-detected).
+4. **Build / Install / Output:** auto-filled from `vercel.json`; no overrides
+   needed.
+
+The previous per-app `apps/web/vercel.json` and `apps/api/vercel.json` files
+have been removed so importing any subdirectory by mistake does not create a
+second Vercel project.
+
+### Railway
+
+Railway reads `/railway.json` and the root `Dockerfile` (also new in this
+layout). The Dockerfile builds and runs only `@ather/web` so a Railway
+project gets one service:
+
+```bash
+# Local sanity check that mirrors what Railway runs:
+docker build -t ather-web .
+docker run --rm -p 3000:3000 -e PORT=3000 ather-web
+```
+
+To deploy on Railway: **New Project → Deploy from GitHub repo →
+ajay35247/Ather**. Railway auto-detects `railway.json` and builds via
+the root `Dockerfile`. No service-by-service configuration is required.
+
+### Other apps in this monorepo
+
+| App | Status | Where it deploys |
+|---|---|---|
+| `apps/web` | Next.js 14 frontend (real code) | The single Vercel/Railway project |
+| `apps/api` | Express + TS backend (real code) | Kubernetes / standalone container via `apps/api/Dockerfile` (not part of the single Vercel/Railway project today) |
+| `apps/admin`, `apps/landing`, `apps/creator-studio-app`, `apps/mobile` | Scaffolds only — no deployable code yet | n/a |
+
+Folding the `apps/api` Express routes into `apps/web` as Next.js Route
+Handlers (so the Express API also rides along on the single Vercel/Railway
+project) is tracked as future incremental work — see the matching plan in the
+PR history. The current single-project deployment serves the Next.js app and
+its built-in auth/profile route handlers.
+
+---
+
 ## 🗄️ Database Schema
 
 ### Core Tables
