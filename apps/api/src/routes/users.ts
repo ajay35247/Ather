@@ -133,7 +133,7 @@ router.patch('/me', authenticate, (req: AuthRequest, res: Response, next: NextFu
   const user = users[req.userId!];
   if (!user) return next(createError('User not found', 404));
 
-  const body = req.body || {};
+  const body = req.body ?? {};
 
   // String-field validation. Each field is independently optional; we only
   // assign on the user object once *all* presented fields are valid, so a

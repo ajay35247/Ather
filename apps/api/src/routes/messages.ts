@@ -38,7 +38,7 @@ const MAX_MESSAGE_CONTENT_LEN = 8_000;
 
 // POST /api/messages/conversations
 router.post('/conversations', authenticate, (req: AuthRequest, res: Response, next: NextFunction) => {
-  const { participantId, type = 'direct', name } = req.body || {};
+  const { participantId, type = 'direct', name } = req.body ?? {};
 
   if (type !== 'direct' && type !== 'group') {
     return next(createError('type must be "direct" or "group"', 400));
