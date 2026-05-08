@@ -14,6 +14,42 @@ const posts: Record<string, any> = Object.create(null);
 const likedPosts: Record<string, Set<string>> = Object.create(null); // postId -> Set<userId>
 const bookmarks: Record<string, Set<string>> = Object.create(null);  // userId -> Set<postId>
 
+// ── Input validation constants ───────────────────────────────────────────────
+// Defense in depth: even with the 256kb global JSON limit, individual fields
+// must be bounded so that one large request can't push pathological values
+// through to renderers (XSS surface) or storage. Mirrors typical social-feed
+// product limits (Twitter/X = 280–25k, Instagram caption = 2200, Mastodon = 500).
+const MAX_POST_CONTENT_LEN = 10_000;
+const MAX_COMMENT_CONTENT_LEN = 4_000;
+const MAX_TAGS = 20;
+const MAX_TAG_LEN = 64;
+const ALLOWED_POST_TYPES = new Set(['text', 'image', 'video', 'link']);
+const ALLOWED_VISIBILITIES = new Set(['public', 'followers', 'private']);
+
+function validateTags(input: unknown): string[] {
+  if (input === undefined || input === null) return [];
+  if (!Array.isArray(input)) {
+    throw new Error('tags must be an array');
+  }
+  if (input.length > MAX_TAGS) {
+    throw new Error(`tags supports at most ${MAX_TAGS} entries`);
+  }
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const t of input) {
+    if (typeof t !== 'string') throw new Error('tags must be strings');
+    const trimmed = t.trim();
+    if (!trimmed) continue;
+    if (trimmed.length > MAX_TAG_LEN) {
+      throw new Error(`tag exceeds ${MAX_TAG_LEN} characters`);
+    }
+    if (seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+  }
+  return out;
+}
+
 // GET /api/posts (paginated)
 router.get('/', optionalAuth, (req: AuthRequest, res: Response) => {
   const cursor = req.query.cursor as string | undefined;
@@ -46,6 +82,26 @@ router.get('/', optionalAuth, (req: AuthRequest, res: Response) => {
 // POST /api/posts
 router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunction) => {
   const { content, type = 'text', mediaUrls = [], tags = [], visibility = 'public' } = req.body;
+
+  // Type / visibility must come from a known set; otherwise the field becomes
+  // a free-form bucket that downstream consumers can't safely switch on.
+  if (typeof type !== 'string' || !ALLOWED_POST_TYPES.has(type)) {
+    return next(createError('Invalid post type', 400));
+  }
+  if (typeof visibility !== 'string' || !ALLOWED_VISIBILITIES.has(visibility)) {
+    return next(createError('Invalid visibility', 400));
+  }
+
+  // Cap content length. The 256kb global JSON limit is too coarse for a
+  // single text field; without this a user could store ~256kb posts that
+  // bloat memory and render times.
+  if (content !== undefined && content !== null && typeof content !== 'string') {
+    return next(createError('content must be a string', 400));
+  }
+  if (typeof content === 'string' && content.length > MAX_POST_CONTENT_LEN) {
+    return next(createError(`content exceeds ${MAX_POST_CONTENT_LEN} characters`, 400));
+  }
+
   if (!content && (!Array.isArray(mediaUrls) || mediaUrls.length === 0)) {
     return next(createError('Post must have content or media', 400));
   }
@@ -60,6 +116,13 @@ router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunct
     return next(createError(e?.message || 'Invalid mediaUrls', 400));
   }
 
+  let safeTags: string[];
+  try {
+    safeTags = validateTags(tags);
+  } catch (e: any) {
+    return next(createError(e?.message || 'Invalid tags', 400));
+  }
+
   const author = users[req.userId!];
   if (!author) return next(createError('User not found', 404));
 
@@ -71,7 +134,7 @@ router.post('/', authenticate, (req: AuthRequest, res: Response, next: NextFunct
     type,
     content: content || '',
     mediaUrls: safeMediaUrls,
-    tags,
+    tags: safeTags,
     visibility,
     likesCount: 0,
     commentsCount: 0,
@@ -142,7 +205,12 @@ router.post(
     if (!post) return next(createError('Post not found', 404));
 
     const { content } = req.body;
-    if (!content?.trim()) return next(createError('Comment cannot be empty', 400));
+    if (typeof content !== 'string' || !content.trim()) {
+      return next(createError('Comment cannot be empty', 400));
+    }
+    if (content.length > MAX_COMMENT_CONTENT_LEN) {
+      return next(createError(`Comment exceeds ${MAX_COMMENT_CONTENT_LEN} characters`, 400));
+    }
 
     const author = users[req.userId!];
     const comment = {

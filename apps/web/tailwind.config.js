@@ -68,6 +68,24 @@ module.exports = {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'gradient': 'gradient 8s ease infinite',
         'float': 'float 6s ease-in-out infinite',
+        'aurora-shift': 'aurora-shift 9s cubic-bezier(0.65, 0, 0.35, 1) infinite',
+        'shimmer': 'shimmer 2.4s linear infinite',
+      },
+      transitionTimingFunction: {
+        'soft': 'cubic-bezier(0.16, 1, 0.3, 1)',
+        'spring': 'cubic-bezier(0.22, 1.4, 0.36, 1)',
+        'cinema': 'cubic-bezier(0.65, 0, 0.35, 1)',
+      },
+      boxShadow: {
+        'glow-warm': '0 20px 60px -20px rgb(249 115 22 / 0.55)',
+        'glow-cool': '0 20px 60px -20px rgb(99 102 241 / 0.50)',
+        'glow-mint': '0 20px 60px -20px rgb(16 185 129 / 0.45)',
+        'lift': '0 24px 64px -16px rgb(2 6 23 / 0.45), 0 8px 24px -8px rgb(2 6 23 / 0.20)',
+      },
+      screens: {
+        'fold': '344px',
+        '3xl': '1920px',
+        '4xl': '2560px',
       },
       keyframes: {
         slideUp: {
@@ -85,6 +103,14 @@ module.exports = {
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'aurora-shift': {
+          '0%, 100%': { 'background-position': '0% 50%' },
+          '50%': { 'background-position': '100% 50%' },
         },
       },
       backgroundSize: {
