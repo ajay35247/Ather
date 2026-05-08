@@ -3,8 +3,98 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { users } from './auth';
 import { createError } from '../middleware/errorHandler';
 import { createNotification } from './notifications';
+import { stories } from './stories';
 
 const router = Router();
+
+// ── GET /api/users/:id/stories ───────────────────────────────────────────────
+// List a single user's active (non-expired) stories, newest-first, with
+// cursor pagination. Defined before `/:username` so the more specific route
+// is registered first, even though Express matches by full pattern.
+//
+// Query: ?limit=<1..50> (default 20), ?cursor=<opaque>
+// Cursor format: base64("<createdAtISO>|<id>"). Returned stories are strictly
+// older than the cursor; ties on createdAt are broken by id for stability.
+router.get(
+  '/:id/stories',
+  authenticate,
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    const target = users[req.params.id];
+    if (!target) return next(createError('User not found', 404));
+
+    const rawLimit = Number(req.query.limit);
+    const limit = Number.isFinite(rawLimit)
+      ? Math.min(Math.max(Math.floor(rawLimit), 1), 50)
+      : 20;
+
+    let cursorTime = Number.POSITIVE_INFINITY;
+    let cursorId = '\uffff';
+    if (typeof req.query.cursor === 'string' && req.query.cursor.length > 0) {
+      let decoded = '';
+      try {
+        decoded = Buffer.from(req.query.cursor, 'base64').toString('utf8');
+      } catch {
+        return next(createError('Invalid cursor', 400));
+      }
+      const sep = decoded.indexOf('|');
+      if (sep <= 0) return next(createError('Invalid cursor', 400));
+      const t = Date.parse(decoded.slice(0, sep));
+      if (!Number.isFinite(t)) return next(createError('Invalid cursor', 400));
+      cursorTime = t;
+      cursorId = decoded.slice(sep + 1);
+    }
+
+    const now = Date.now();
+    const all = Object.values(stories)
+      .filter((s) => s.authorId === req.params.id)
+      .filter((s) => new Date(s.expiresAt).getTime() > now)
+      .sort((a, b) => {
+        const ta = new Date(a.createdAt).getTime();
+        const tb = new Date(b.createdAt).getTime();
+        if (tb !== ta) return tb - ta;
+        return b.id < a.id ? -1 : b.id > a.id ? 1 : 0;
+      });
+
+    // Strictly older than cursor (createdAt, id).
+    const after = all.filter((s) => {
+      const t = new Date(s.createdAt).getTime();
+      if (t < cursorTime) return true;
+      if (t > cursorTime) return false;
+      return s.id < cursorId;
+    });
+
+    const page = after.slice(0, limit);
+    const last = page[page.length - 1];
+    const nextCursor =
+      page.length === limit && last
+        ? Buffer.from(`${last.createdAt}|${last.id}`, 'utf8').toString('base64')
+        : null;
+
+    const { password: _pw, email: _em, ...publicAuthor } = target as any;
+
+    res.json({
+      success: true,
+      data: {
+        author: publicAuthor,
+        stories: page.map((s) => ({
+          id: s.id,
+          authorId: s.authorId,
+          type: s.type,
+          text: s.text,
+          mediaUrls: s.mediaUrls,
+          backgroundColor: s.backgroundColor,
+          createdAt: s.createdAt,
+          expiresAt: s.expiresAt,
+          viewsCount: s.viewers.size,
+          reactionsCount: Object.keys(s.reactions).length,
+          isViewed: s.viewers.has(req.userId!),
+          myReaction: s.reactions[req.userId!] || null,
+        })),
+        nextCursor,
+      },
+    });
+  },
+);
 
 // GET /api/users/:username
 router.get('/:username', (req: AuthRequest, res: Response, next: NextFunction) => {

@@ -294,6 +294,13 @@ router.delete(
     const story = stories[req.params.id];
     if (!story || isExpired(story)) return next(createError('Story not found', 404));
 
+    // 404 when there's nothing to remove — avoids silently 200ing on stale
+    // un-react taps from older clients and gives callers a deterministic
+    // signal that their state is out of sync.
+    if (!Object.prototype.hasOwnProperty.call(story.reactions, req.userId!)) {
+      return next(createError('Reaction not found', 404));
+    }
+
     delete story.reactions[req.userId!];
     res.json({
       success: true,

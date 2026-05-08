@@ -82,8 +82,15 @@ router.post(
   idempotency(),
   (req: AuthRequest, res: Response, next: NextFunction) => {
     const amount = Number(req.body?.amount);
-    if (!Number.isFinite(amount) || amount <= 0 || amount > 1_000_000) {
-      return next(createError('amount must be a positive number ≤ 1,000,000', 400));
+    if (
+      !Number.isFinite(amount) ||
+      !Number.isInteger(amount) ||
+      amount <= 0 ||
+      amount > 1_000_000
+    ) {
+      return next(
+        createError('amount must be a positive integer ≤ 1,000,000 (minor units)', 400),
+      );
     }
 
     const wallet = getOrCreateWallet(req.userId!);
@@ -116,13 +123,24 @@ router.post('/tip', authenticate, limiters.money, idempotency(), (req: AuthReque
   const numAmount = Number(amount);
 
   if (!toUserId) return next(createError('toUserId is required', 400));
+  if (typeof toUserId !== 'string') return next(createError('toUserId must be a string', 400));
   if (toUserId === req.userId) return next(createError('Cannot tip yourself', 400));
-  if (!users[toUserId]) return next(createError('Recipient not found', 404));
-  if (!Number.isFinite(numAmount) || numAmount <= 0) {
-    return next(createError('amount must be a positive number', 400));
+  if (!Object.prototype.hasOwnProperty.call(users, toUserId)) {
+    return next(createError('Recipient not found', 404));
   }
-  if (note && typeof note === 'string' && note.length > 280) {
-    return next(createError('note too long', 400));
+  if (
+    !Number.isFinite(numAmount) ||
+    !Number.isInteger(numAmount) ||
+    numAmount <= 0 ||
+    numAmount > 1_000_000
+  ) {
+    return next(
+      createError('amount must be a positive integer ≤ 1,000,000 (minor units)', 400),
+    );
+  }
+  if (note !== undefined) {
+    if (typeof note !== 'string') return next(createError('note must be a string', 400));
+    if (note.length > 280) return next(createError('note too long', 400));
   }
 
   const fromWallet = getOrCreateWallet(req.userId!);
@@ -153,7 +171,10 @@ router.post('/tip', authenticate, limiters.money, idempotency(), (req: AuthReque
 
 // ── GET /api/monetization/transactions ─────────────────────────────────────
 router.get('/transactions', authenticate, (req: AuthRequest, res: Response) => {
-  const limit = Math.min(Number(req.query.limit) || 50, 200);
+  const raw = Number(req.query.limit);
+  const limit = Number.isFinite(raw)
+    ? Math.min(Math.max(Math.floor(raw), 1), 200)
+    : 50;
   const userId = req.userId!;
   const mine = transactions
     .filter((t) => t.fromUserId === userId || t.toUserId === userId)
@@ -180,9 +201,17 @@ router.post(
       tier?: Subscription['tier'];
     };
     if (!creatorId) return next(createError('creatorId is required', 400));
+    if (typeof creatorId !== 'string') return next(createError('creatorId must be a string', 400));
     if (creatorId === req.userId) return next(createError('Cannot subscribe to yourself', 400));
-    if (!users[creatorId]) return next(createError('Creator not found', 404));
-    if (!(tier in TIER_PRICE)) return next(createError('Invalid tier', 400));
+    if (!Object.prototype.hasOwnProperty.call(users, creatorId)) {
+      return next(createError('Creator not found', 404));
+    }
+    // `in` traverses the prototype chain, so a malicious `tier` like
+    // '__proto__' or 'toString' would slip past. hasOwnProperty.call works
+    // even when TIER_PRICE was created without a null prototype.
+    if (typeof tier !== 'string' || !Object.prototype.hasOwnProperty.call(TIER_PRICE, tier)) {
+      return next(createError('Invalid tier', 400));
+    }
 
     const id = uuidv4();
     const sub: Subscription = {
@@ -203,6 +232,7 @@ router.post(
 router.delete(
   '/subscriptions/:id',
   authenticate,
+  limiters.money,
   (req: AuthRequest, res: Response, next: NextFunction) => {
     const sub = subscriptions[req.params.id];
     if (!sub) return next(createError('Subscription not found', 404));
