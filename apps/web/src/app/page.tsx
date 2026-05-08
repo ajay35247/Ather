@@ -39,6 +39,7 @@ import {
 import { AuroraBackground } from '@/components/marketing/AuroraBackground';
 import { HeroOrb } from '@/components/marketing/HeroOrb';
 import { SignalsMarquee } from '@/components/marketing/SignalsMarquee';
+import { useSpotlight } from '@/components/marketing/useSpotlight';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Content
@@ -224,6 +225,7 @@ export default function LandingPage() {
 
   const tr = useMemo(() => makeT(locale), [locale]);
   const isClient = now.getTime() !== 0;
+  const onSpotlight = useSpotlight();
 
   const greeting = useMemo(() => {
     if (!isClient) return tr('hello');
@@ -391,17 +393,7 @@ export default function LandingPage() {
             return (
               <article
                 key={f.title}
-                onMouseMove={(e) => {
-                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  (e.currentTarget as HTMLElement).style.setProperty(
-                    '--mx',
-                    String((e.clientX - r.left) / r.width),
-                  );
-                  (e.currentTarget as HTMLElement).style.setProperty(
-                    '--my',
-                    String((e.clientY - r.top) / r.height),
-                  );
-                }}
+                onMouseMove={onSpotlight}
                 className="spotlight ring-chromatic group relative bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-2xl p-6 transition-all duration-500 ease-soft hover:-translate-y-1 hover:shadow-lift backdrop-blur"
                 style={{ animationDelay: `${i * 40}ms` }}
               >
@@ -506,13 +498,12 @@ export default function LandingPage() {
 // ─────────────────────────────────────────────────────────────────────────
 
 function StatCard({ label, value, hint }: { label: string; value: string; hint: string }) {
+  const onSpotlight = useSpotlight();
   return (
-    <div className="ring-chromatic spotlight rounded-2xl glass p-5 transition-colors duration-300 ease-soft hover:bg-white/[0.06]"
-         onMouseMove={(e) => {
-           const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-           (e.currentTarget as HTMLElement).style.setProperty('--mx', String((e.clientX - r.left) / r.width));
-           (e.currentTarget as HTMLElement).style.setProperty('--my', String((e.clientY - r.top) / r.height));
-         }}>
+    <div
+      onMouseMove={onSpotlight}
+      className="ring-chromatic spotlight rounded-2xl glass p-5 transition-colors duration-300 ease-soft hover:bg-white/[0.06]"
+    >
       <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2">
         {label}
       </p>

@@ -76,9 +76,10 @@
     --shadow-lg: 0 24px 64px -16px rgb(0 0 0 / 0.75), 0 8px 24px -8px rgb(0 0 0 / 0.45);
   }
 
-  /* AMOLED — collapse near-blacks to true #000 for OLED batteries. */
-  @media (prefers-color-scheme: dark) and (dynamic-range: high) {
-    .dark {
+  /* AMOLED — collapse the page surface to true #000 for OLED batteries. */
+  @media (prefers-color-scheme: dark) {
+    .dark.amoled,
+    .amoled .dark {
       --surface-0: 0 0 0;
     }
   }
