@@ -13,11 +13,27 @@ export interface RefreshClaims {
 }
 
 function accessSecret(): string {
-  return process.env.JWT_ACCESS_SECRET ?? 'dev-only-change-me-access-secret';
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') throw new Error('JWT_ACCESS_SECRET must be set in production');
+    return 'dev-only-change-me-access-secret';
+  }
+  if (process.env.NODE_ENV === 'production' && secret.startsWith('dev-only')) {
+    throw new Error('Refusing to start in production with default JWT_ACCESS_SECRET');
+  }
+  return secret;
 }
 
 function refreshSecret(): string {
-  return process.env.JWT_REFRESH_SECRET ?? 'dev-only-change-me-refresh-secret';
+  const secret = process.env.JWT_REFRESH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') throw new Error('JWT_REFRESH_SECRET must be set in production');
+    return 'dev-only-change-me-refresh-secret';
+  }
+  if (process.env.NODE_ENV === 'production' && secret.startsWith('dev-only')) {
+    throw new Error('Refusing to start in production with default JWT_REFRESH_SECRET');
+  }
+  return secret;
 }
 
 function accessTTL(): number {

@@ -19,6 +19,13 @@ function getClaimsFromRequest(request: Request) {
   }
 }
 
+async function ensureProfileExists(userId: string, handle: string) {
+  const existing = await profileStore.getByUserId(userId);
+  if (!existing) {
+    await profileStore.upsert({ userId, handle, displayName: handle, personaType: 'personal' });
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const claims = getClaimsFromRequest(request);
@@ -44,10 +51,7 @@ export async function PATCH(request: Request) {
     }
     const body = await request.json();
     const patch = UpdateSchema.parse(body);
-    const existing = await profileStore.getByUserId(claims.sub);
-    if (!existing) {
-      await profileStore.upsert({ userId: claims.sub, handle: claims.handle, displayName: claims.handle, personaType: 'personal' });
-    }
+    await ensureProfileExists(claims.sub, claims.handle);
     const updated = await profileStore.update(claims.sub, patch);
     return NextResponse.json({ profile: updated });
   } catch (err) {
