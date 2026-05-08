@@ -133,10 +133,12 @@ describe('Phase 2-5 Routes', () => {
     });
 
     it('POST /api/monetization/tip blocks insufficient funds', async () => {
+      // bob has 1000 from the prior test; amount must exceed his balance
+      // (and stay within the new ≤1,000,000 hardening cap).
       const res = await request(app)
         .post('/api/monetization/tip')
         .set('Authorization', `Bearer ${bob.token}`)
-        .send({ toUserId: alice.userId, amount: 9_999_999 });
+        .send({ toUserId: alice.userId, amount: 500_000 });
       expect(res.status).toBe(402);
     });
 

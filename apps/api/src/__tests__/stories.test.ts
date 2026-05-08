@@ -260,4 +260,42 @@ describe('Stories Routes', () => {
     const gone = await request(app).get(`/api/stories/${id}`);
     expect(gone.status).toBe(404);
   });
+
+  it('DELETE /api/stories/:id/reactions - returns 404 when no reaction exists', async () => {
+    const created = await request(app)
+      .post('/api/stories')
+      .set('Authorization', `Bearer ${author.token}`)
+      .send({ type: 'text', text: 'no react' });
+    const id = created.body.data.id;
+
+    // Viewer never reacted — DELETE should not silently 200.
+    const res = await request(app)
+      .delete(`/api/stories/${id}/reactions`)
+      .set('Authorization', `Bearer ${viewer.token}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('DELETE /api/stories/:id/reactions - removes existing reaction then 404 on retry', async () => {
+    const created = await request(app)
+      .post('/api/stories')
+      .set('Authorization', `Bearer ${author.token}`)
+      .send({ type: 'text', text: 'react then unreact' });
+    const id = created.body.data.id;
+
+    await request(app)
+      .post(`/api/stories/${id}/reactions`)
+      .set('Authorization', `Bearer ${viewer.token}`)
+      .send({ emoji: '🔥' });
+
+    const ok = await request(app)
+      .delete(`/api/stories/${id}/reactions`)
+      .set('Authorization', `Bearer ${viewer.token}`);
+    expect(ok.status).toBe(200);
+    expect(ok.body.data.reactionsCount).toBe(0);
+
+    const again = await request(app)
+      .delete(`/api/stories/${id}/reactions`)
+      .set('Authorization', `Bearer ${viewer.token}`);
+    expect(again.status).toBe(404);
+  });
 });

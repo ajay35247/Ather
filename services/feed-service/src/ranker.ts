@@ -59,6 +59,12 @@ export interface ScoredPost extends PostSignals {
     freshness: number;
     creator: number;
   };
+  /**
+   * Lowercased tag set, cached on the post the first time we score it so
+   * MMR's pairwise similarity (which is the hot path on the 1k-candidate
+   * profile) doesn't re-allocate a Set + lower-case array per comparison.
+   */
+  _tagSet?: Set<string>;
 }
 
 /** Sigmoid-shaped engagement probability from raw counters. */
@@ -77,13 +83,29 @@ export function engagementProb(m: PostSignals['metrics']): number {
 export function interestAffinity(viewer: ViewerSignals, post: PostSignals): number {
   if (viewer.interests.length === 0 || post.tags.length === 0) return 0;
   const interests = new Set(viewer.interests.map((t) => t.toLowerCase()));
-  const tags = new Set(post.tags.map((t) => t.toLowerCase()));
+  return jaccardAgainst(interests, post.tags);
+}
+
+/**
+ * Jaccard between an already-lowercased interest set and a post's tag list.
+ * Used as the inner loop when scoring a batch — caller hoists the interest
+ * set out so we don't rebuild it once per candidate.
+ */
+function jaccardAgainst(interestsLc: ReadonlySet<string>, tags: ReadonlyArray<string>): number {
+  if (interestsLc.size === 0 || tags.length === 0) return 0;
   let inter = 0;
-  for (const t of tags) if (interests.has(t)) inter++;
-  const union = new Set<string>();
-  for (const t of interests) union.add(t);
-  for (const t of tags) union.add(t);
-  return union.size === 0 ? 0 : inter / union.size;
+  const tagSet = new Set<string>();
+  for (const t of tags) {
+    const lc = t.toLowerCase();
+    if (!tagSet.has(lc)) {
+      tagSet.add(lc);
+      if (interestsLc.has(lc)) inter++;
+    }
+  }
+  // |A ∪ B| = |A| + |B| - |A ∩ B|
+  return (interestsLc.size + tagSet.size - inter) === 0
+    ? 0
+    : inter / (interestsLc.size + tagSet.size - inter);
 }
 
 /** Exponential decay; τ in hours. */
@@ -129,6 +151,12 @@ export function scoreOne(viewer: ViewerSignals, post: PostSignals, now: number =
  * λ = 0.95 here, so diversity contributes the prompt's 0.05 weight.
  */
 export function mmrRerank(candidates: ScoredPost[], k: number, lambda = 0.95): ScoredPost[] {
+  // Pre-compute lowercased tag sets once per candidate. Without this,
+  // similarity is recomputed via fresh Set allocations on every (pool, slate)
+  // pair — the dominant cost at n≈1000.
+  for (const c of candidates) {
+    if (!c._tagSet) c._tagSet = toLowerSet(c.tags);
+  }
   const pool = [...candidates];
   const out: ScoredPost[] = [];
   while (out.length < k && pool.length > 0) {
@@ -136,9 +164,14 @@ export function mmrRerank(candidates: ScoredPost[], k: number, lambda = 0.95): S
     let bestVal = -Infinity;
     for (let i = 0; i < pool.length; i++) {
       const p = pool[i];
-      const simPenalty = out.length
-        ? Math.max(...out.map((s) => slatesim(p, s)))
-        : 0;
+      let simPenalty = 0;
+      // Manual max so we can short-circuit on the same-author hard penalty
+      // (sim=1) and skip the rest of the slate.
+      for (let j = 0; j < out.length; j++) {
+        const s = slatesimCached(p, out[j]);
+        if (s > simPenalty) simPenalty = s;
+        if (simPenalty >= 1) break;
+      }
       const v = lambda * p.score - (1 - lambda) * simPenalty;
       if (v > bestVal) {
         bestVal = v;
@@ -154,10 +187,13 @@ export function mmrRerank(candidates: ScoredPost[], k: number, lambda = 0.95): S
 export function policyFilter(viewer: ViewerSignals, candidates: PostSignals[]): PostSignals[] {
   const blocked = new Set(viewer.blockedAuthorIds);
   const muted = new Set(viewer.mutedTags.map((t) => t.toLowerCase()));
+  const hasMuted = muted.size > 0;
   return candidates.filter((p) => {
     if (blocked.has(p.authorId)) return false;
     if (p.authorGated) return false;
-    for (const t of p.tags) if (muted.has(t.toLowerCase())) return false;
+    if (hasMuted) {
+      for (const t of p.tags) if (muted.has(t.toLowerCase())) return false;
+    }
     return true;
   });
 }
@@ -170,7 +206,22 @@ export function rankSlate(
   now: number = Date.now()
 ): ScoredPost[] {
   const filtered = policyFilter(viewer, candidates);
-  const scored = filtered.map((p) => scoreOne(viewer, p, now));
+  // Hoist viewer interest set out of the per-candidate scoring loop.
+  const interestsLc = new Set(viewer.interests.map((t) => t.toLowerCase()));
+  const scored: ScoredPost[] = filtered.map((p) => {
+    const components = {
+      engagement: engagementProb(p.metrics),
+      interest: jaccardAgainst(interestsLc, p.tags),
+      freshness: freshness(p, now),
+      creator: creatorQuality(p)
+    };
+    const score =
+      0.4 * components.engagement +
+      0.3 * components.interest +
+      0.15 * components.freshness +
+      0.1 * components.creator;
+    return { ...p, score, components };
+  });
   scored.sort((a, b) => b.score - a.score);
   // Take top 3*k for MMR so we have room to diversify.
   const head = scored.slice(0, Math.max(k * 3, k));
@@ -184,15 +235,24 @@ function clamp(v: number, lo: number, hi: number): number {
 function clamp01(v: number): number {
   return clamp(v, 0, 1);
 }
-function slatesim(a: PostSignals, b: PostSignals): number {
-  // Same author → strong de-dup penalty.
+function toLowerSet(tags: ReadonlyArray<string>): Set<string> {
+  const s = new Set<string>();
+  for (const t of tags) s.add(t.toLowerCase());
+  return s;
+}
+/** MMR fast path: assumes both sides already have `_tagSet` cached. */
+function slatesimCached(a: ScoredPost, b: ScoredPost): number {
   if (a.authorId === b.authorId) return 1;
-  if (a.tags.length === 0 || b.tags.length === 0) return 0;
-  const s = new Set(b.tags.map((t) => t.toLowerCase()));
+  const as = a._tagSet!;
+  const bs = b._tagSet!;
+  if (as.size === 0 || bs.size === 0) return 0;
+  return jaccardSets(as, bs);
+}
+function jaccardSets(a: ReadonlySet<string>, b: ReadonlySet<string>): number {
+  // Iterate the smaller set for the intersection count.
+  const [small, big] = a.size <= b.size ? [a, b] : [b, a];
   let inter = 0;
-  for (const t of a.tags) if (s.has(t.toLowerCase())) inter++;
-  const union = new Set<string>();
-  for (const t of a.tags) union.add(t.toLowerCase());
-  for (const t of b.tags) union.add(t.toLowerCase());
-  return union.size === 0 ? 0 : inter / union.size;
+  for (const t of small) if (big.has(t)) inter++;
+  const union = a.size + b.size - inter;
+  return union === 0 ? 0 : inter / union;
 }
