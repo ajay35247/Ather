@@ -32,10 +32,8 @@ export async function GET(request: Request) {
     if (!claims) {
       return NextResponse.json({ status: 401, code: 'unauthorized', detail: 'missing or invalid bearer token' }, { status: 401 });
     }
-    let profile = await profileStore.getByUserId(claims.sub);
-    if (!profile) {
-      profile = await profileStore.upsert({ userId: claims.sub, handle: claims.handle, displayName: claims.handle, personaType: 'personal' });
-    }
+    await ensureProfileExists(claims.sub, claims.handle);
+    const profile = await profileStore.getByUserId(claims.sub);
     return NextResponse.json({ profile });
   } catch (err) {
     console.error('GET /api/profile/me', err);
