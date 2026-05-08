@@ -36,6 +36,9 @@ import {
   isIndiaBusinessHour,
   KNOWN_UPI_PSPS,
 } from '@ather/india';
+import { AuroraBackground } from '@/components/marketing/AuroraBackground';
+import { HeroOrb } from '@/components/marketing/HeroOrb';
+import { SignalsMarquee } from '@/components/marketing/SignalsMarquee';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Content
@@ -239,12 +242,9 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white overflow-hidden relative">
-      {/* Ambient background — saffron + green + indigo glows */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -top-40 -right-40 w-[40rem] h-[40rem] rounded-full bg-brand-600/20 blur-3xl animate-pulse-slow" />
-        <div className="absolute -bottom-40 -left-40 w-[40rem] h-[40rem] rounded-full bg-emerald-600/15 blur-3xl animate-pulse-slow" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60rem] h-[60rem] rounded-full bg-chakra-600/10 blur-3xl" />
-      </div>
+      {/* Cinematic ambient backdrop — replaces the legacy blob trio.
+          Aurora sweep + dot grid + vignette, all GPU-only, motion-safe. */}
+      <AuroraBackground />
 
       {/* Tricolour bar */}
       <div className="flex h-1 w-full" aria-hidden>
@@ -281,57 +281,76 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 pt-12 pb-16 sm:pt-20 sm:pb-24 text-center animate-fade-in">
-        {isClient && (
-          <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs sm:text-sm text-gray-300 backdrop-blur">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-            <span>
-              {greeting} · {istGreeting('en', now)} — {istNow} · {businessHour ? '🟢 active' : '🌙 quiet'} hours
-            </span>
+      {/* Hero — text on the left, layered orb on the right (lg+). */}
+      <section className="relative max-w-7xl mx-auto px-6 pt-12 pb-12 sm:pt-16 sm:pb-20 animate-fade-in">
+        <div className="grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-16 items-center">
+          <div className="text-center lg:text-left">
+            {isClient && (
+              <div className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full glass text-xs sm:text-sm text-gray-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <span>
+                  {greeting} · {istGreeting('en', now)} — {istNow} · {businessHour ? '🟢 active' : '🌙 quiet'} hours
+                </span>
+              </div>
+            )}
+
+            <h1 className="text-display mb-6">
+              आपका सोशल OS,{' '}
+              <span className="text-aurora">built for Bharat.</span>
+            </h1>
+
+            <p className="text-lead text-gray-300 max-w-2xl lg:max-w-xl mx-auto lg:mx-0 mb-4">
+              One identity for posts, chats, communities, payments and creator earnings.
+              UPI-native, multilingual, DPDP-compliant.
+            </p>
+            <p className="text-sm text-gray-400 mb-10 inline-flex items-center gap-2">
+              <Globe2 className="w-4 h-4" /> {LOCALE_COUNT} languages supported · 22 Indian + 9 world
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
+              <Link
+                href="/register"
+                className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-white px-8 py-4 rounded-2xl text-base font-semibold transition-all duration-300 ease-soft shadow-glow-warm hover:-translate-y-0.5"
+              >
+                Join Ather Free
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform ease-spring duration-300" />
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 glass hover:glass-strong text-white px-8 py-4 rounded-2xl text-base font-semibold transition-all duration-300 ease-soft"
+              >
+                <TrendingUp className="w-4 h-4" /> See Dashboard
+              </Link>
+            </div>
+
+            {festival && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500/20 to-emerald-500/20 border border-brand-500/30 text-sm">
+                🎉 <strong>{festival.name}</strong> · {festival.nameHi}
+              </div>
+            )}
           </div>
-        )}
 
-        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight leading-[1.05] mb-6">
-          आपका सोशल OS,{' '}
-          <span className="bg-gradient-to-r from-brand-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent bg-300% animate-gradient">
-            built for Bharat.
-          </span>
-        </h1>
-
-        <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto mb-4 leading-relaxed">
-          One identity for posts, chats, communities, payments and creator earnings.
-          UPI-native, multilingual, DPDP-compliant.
-        </p>
-        <p className="text-sm text-gray-400 mb-10 inline-flex items-center gap-2">
-          <Globe2 className="w-4 h-4" /> {LOCALE_COUNT} languages supported · 22 Indian + 9 world
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-          <Link
-            href="/register"
-            className="group inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-white px-8 py-4 rounded-2xl text-base font-semibold transition-all shadow-xl shadow-brand-600/30 hover:shadow-2xl hover:shadow-brand-500/40 hover:-translate-y-0.5"
-          >
-            Join Ather Free
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/20 px-8 py-4 rounded-2xl text-base font-semibold transition-all backdrop-blur"
-          >
-            <TrendingUp className="w-4 h-4" /> See Dashboard
-          </Link>
+          {/* Spatial orb — hidden on small screens to keep the fold tight. */}
+          <div className="hidden lg:flex items-center justify-center">
+            <HeroOrb />
+          </div>
         </div>
-
-        {festival && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500/20 to-emerald-500/20 border border-brand-500/30 text-sm">
-            🎉 <strong>{festival.name}</strong> · {festival.nameHi}
-          </div>
-        )}
       </section>
+
+      {/* Live signals — gives the surface a heartbeat. */}
+      <SignalsMarquee
+        items={[
+          'Creators paid · ' + formatINR(sampleEarningsPaise) + ' this week',
+          KNOWN_UPI_PSPS.length + '+ UPI handles supported',
+          LOCALE_COUNT + ' languages live',
+          'Asia/Kolkata · UTC+05:30 · no DST',
+          'DPDP · GST · RBI compliant by default',
+          'C2PA content provenance enabled',
+        ]}
+      />
 
       {/* Live demo strip — uses @ather/india utilities */}
       <section className="max-w-6xl mx-auto px-6 pb-16">
@@ -372,7 +391,18 @@ export default function LandingPage() {
             return (
               <article
                 key={f.title}
-                className="group relative bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 rounded-2xl p-6 transition-all hover:-translate-y-1 backdrop-blur"
+                onMouseMove={(e) => {
+                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  (e.currentTarget as HTMLElement).style.setProperty(
+                    '--mx',
+                    String((e.clientX - r.left) / r.width),
+                  );
+                  (e.currentTarget as HTMLElement).style.setProperty(
+                    '--my',
+                    String((e.clientY - r.top) / r.height),
+                  );
+                }}
+                className="spotlight ring-chromatic group relative bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-2xl p-6 transition-all duration-500 ease-soft hover:-translate-y-1 hover:shadow-lift backdrop-blur"
                 style={{ animationDelay: `${i * 40}ms` }}
               >
                 {/* Top tricolour accent on hover */}
@@ -381,8 +411,8 @@ export default function LandingPage() {
                   className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-india-saffron via-white/40 to-india-green opacity-0 group-hover:opacity-100 transition-opacity rounded-t-2xl"
                 />
 
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500/20 to-amber-500/20 border border-brand-500/20 flex items-center justify-center text-brand-300 group-hover:scale-110 transition-transform">
+                <div className="relative z-[2] flex items-start justify-between gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500/20 to-amber-500/20 border border-brand-500/20 flex items-center justify-center text-brand-300 group-hover:scale-110 transition-transform duration-300 ease-spring">
                     <Icon className="w-5 h-5" />
                   </div>
                   <span
@@ -392,9 +422,9 @@ export default function LandingPage() {
                   </span>
                 </div>
 
-                <h3 className="text-lg font-bold text-white mb-1">{f.title}</h3>
-                <p className="text-sm text-gray-400 mb-3">{f.titleHi}</p>
-                <p className="text-sm text-gray-300 leading-relaxed">{f.description}</p>
+                <h3 className="relative z-[2] text-lg font-bold text-white mb-1">{f.title}</h3>
+                <p className="relative z-[2] text-sm text-gray-400 mb-3">{f.titleHi}</p>
+                <p className="relative z-[2] text-sm text-gray-300 leading-relaxed">{f.description}</p>
               </article>
             );
           })}
@@ -403,7 +433,7 @@ export default function LandingPage() {
 
       {/* Trust strip */}
       <section className="max-w-5xl mx-auto px-6 py-12">
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-transparent p-8 backdrop-blur">
+        <div className="ring-chromatic glass-strong rounded-2xl p-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
             {[
               { icon: ShieldCheck, label: 'DPDP-compliant by default' },
@@ -419,17 +449,31 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="max-w-3xl mx-auto px-6 py-20 text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-          Join the <span className="bg-gradient-to-r from-brand-400 to-amber-300 bg-clip-text text-transparent">next billion</span> on Ather.
+      {/* Final CTA — chromatic ring + drifting starfield. */}
+      <section className="relative max-w-3xl mx-auto px-6 py-20 text-center">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 opacity-40"
+          style={{
+            backgroundImage:
+              'radial-gradient(rgb(255 255 255 / 0.6) 1px, transparent 1px), radial-gradient(rgb(255 255 255 / 0.4) 1px, transparent 1px)',
+            backgroundSize: '120px 120px, 200px 200px',
+            backgroundPosition: '0 0, 60px 60px',
+            maskImage:
+              'radial-gradient(60% 60% at 50% 50%, #000 30%, transparent 80%)',
+            WebkitMaskImage:
+              'radial-gradient(60% 60% at 50% 50%, #000 30%, transparent 80%)',
+          }}
+        />
+        <h2 className="text-display !text-4xl sm:!text-5xl mb-4">
+          Join the <span className="text-aurora">next billion</span> on Ather.
         </h2>
         <p className="text-gray-400 mb-8">
           Free forever for personal use. Creator monetisation in days, not months.
         </p>
         <Link
           href="/register"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-white px-10 py-4 rounded-2xl text-lg font-bold transition-all shadow-xl shadow-brand-600/30 hover:shadow-2xl hover:shadow-brand-500/40 hover:-translate-y-0.5"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-400 hover:to-amber-400 text-white px-10 py-4 rounded-2xl text-lg font-bold transition-all duration-300 ease-soft shadow-glow-warm hover:-translate-y-0.5"
         >
           Create your account <ArrowRight className="w-5 h-5" />
         </Link>
@@ -463,7 +507,12 @@ export default function LandingPage() {
 
 function StatCard({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] p-5 transition-colors backdrop-blur">
+    <div className="ring-chromatic spotlight rounded-2xl glass p-5 transition-colors duration-300 ease-soft hover:bg-white/[0.06]"
+         onMouseMove={(e) => {
+           const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+           (e.currentTarget as HTMLElement).style.setProperty('--mx', String((e.clientX - r.left) / r.width));
+           (e.currentTarget as HTMLElement).style.setProperty('--my', String((e.clientY - r.top) / r.height));
+         }}>
       <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-2">
         {label}
       </p>
