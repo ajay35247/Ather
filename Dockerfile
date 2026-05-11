@@ -1,11 +1,15 @@
 # syntax=docker/dockerfile:1.7
 #
-# Single-project Dockerfile for Railway / any container host.
-# Builds and serves the @ather/web Next.js app from the monorepo root.
+# Root Dockerfile for Railway / any container host.
+#
+# This builds and serves the @ather/api Express server from the monorepo. The
+# deployment topology is:
+#   • Vercel    → apps/web (Next.js)             — see apps/web/vercel.json
+#   • Railway   → apps/api (this Dockerfile)     — see railway.json
 #
 # Per-app Dockerfiles still live under apps/*/Dockerfile and services/*/Dockerfile
-# for direct service-by-service deployment to Kubernetes; this root file is the
-# entry point used when the repo is deployed as a single project.
+# for direct service-by-service Kubernetes deployment; this root file is the
+# entry point used when the API is deployed as a single project to Railway.
 
 # ─── Builder ─────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -16,39 +20,52 @@ RUN corepack enable
 
 WORKDIR /repo
 
-# Copy workspace manifest + lockfile first for better layer caching.
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./
-COPY apps/web/package.json ./apps/web/package.json
+# Copy workspace manifests + lockfile first for better layer caching.
+# Pull in *every* workspace package.json so pnpm can resolve workspace:*
+# references during install; the actual sources are copied after.
+# .npmrc carries `force-legacy-deploy=true` which is required for
+# `pnpm deploy --prod` under pnpm v10.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc turbo.json tsconfig.base.json ./
+COPY apps/api/package.json ./apps/api/package.json
 COPY packages ./packages
 
-# Install only what the web app's workspace closure needs.
-RUN pnpm install --frozen-lockfile --filter @ather/web...
+# Install only the api workspace closure.
+RUN pnpm install --frozen-lockfile --filter @ather/api...
 
-# Bring in the rest of the web app source and build.
-COPY apps/web ./apps/web
-RUN pnpm --filter @ather/web build
+# Bring in the api source and build.
+COPY apps/api ./apps/api
+RUN pnpm --filter @ather/api build
+
+# Prune dev deps from the install for a slim runtime image.
+RUN pnpm --filter @ather/api --prod deploy /deploy
 
 # ─── Runner ──────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 
 ENV NODE_ENV=production
-ENV PNPM_HOME=/pnpm
-ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable
+ENV PORT=4000
 
-WORKDIR /repo
+WORKDIR /app
 
-# Copy the built workspace as-is. pnpm next start needs the workspace layout
-# preserved so symlinked workspace deps (@ather/shared, @ather/i18n, @ather/india)
-# resolve at runtime.
-COPY --from=builder /repo /repo
+# `pnpm deploy --prod` produces a self-contained directory at /deploy with
+# node_modules + package.json + dist (we copy dist next). Using `deploy`
+# rather than copying the whole workspace avoids shipping every other
+# service's source tree in the runtime image.
+COPY --from=builder /deploy/node_modules ./node_modules
+COPY --from=builder /deploy/package.json ./package.json
+COPY --from=builder /repo/apps/api/dist ./dist
 
-# Drop privileges.
-RUN addgroup -S -g 1001 nodejs && adduser -S -u 1001 -G nodejs nextjs
-USER nextjs
+# Drop privileges. Using a fixed UID/GID lets host-volume mounts (if any) be
+# predictable; node:alpine doesn't ship a non-root user by default.
+RUN addgroup -S -g 1001 nodejs && adduser -S -u 1001 -G nodejs api
+USER api
 
-# Railway/Heroku-style: PORT is injected by the host. Default to 3000 for local.
-ENV PORT=3000
-EXPOSE 3000
+EXPOSE 4000
 
-CMD ["pnpm", "--filter", "@ather/web", "start"]
+# Container-level liveness — Railway will also hit /livez over HTTP, but this
+# gives Docker Swarm / `docker run --health` a working signal too.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -q -O- "http://127.0.0.1:${PORT}/livez" || exit 1
+
+CMD ["node", "dist/index.js"]
+
