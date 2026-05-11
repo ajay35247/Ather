@@ -20,6 +20,11 @@ export interface OtpRecord {
   attempts: number;
 }
 
+/**
+ * Max verify attempts per issued OTP. The space is 10^6 codes; capping at 5
+ * limits an attacker to a 5/1,000,000 ≈ 0.0005% chance per record, and the
+ * record is destroyed once the cap is hit so they cannot keep guessing.
+ */
 const MAX_ATTEMPTS = 5;
 
 // Object.create(null) keeps __proto__ keys harmless if a caller ever uses an

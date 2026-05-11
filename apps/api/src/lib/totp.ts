@@ -66,6 +66,9 @@ export function otpauthUrl(opts: {
   return `otpauth://totp/${label}?${params.toString()}`;
 }
 
+/** TOTP truncation modulo for a 6-digit code (RFC 6238 §4 with digits=6). */
+const TOTP_DIGITS_MODULO = 1_000_000;
+
 /** Compute the 6-digit TOTP code for a given secret + timestep counter. */
 function hotp(secretBytes: Buffer, counter: number): string {
   // 8-byte big-endian counter. JS can't bit-shift past 32; split into halves.
@@ -82,7 +85,7 @@ function hotp(secretBytes: Buffer, counter: number): string {
     ((hmac[offset + 1] & 0xff) << 16) |
     ((hmac[offset + 2] & 0xff) << 8) |
     (hmac[offset + 3] & 0xff);
-  return (code % 1_000_000).toString().padStart(6, '0');
+  return (code % TOTP_DIGITS_MODULO).toString().padStart(6, '0');
 }
 
 /** Compute current 6-digit TOTP code (mainly useful in tests). */

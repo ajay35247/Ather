@@ -174,7 +174,7 @@ describe('Auth M1 — Forgot / Reset password', () => {
     expect(newLogin.status).toBe(200);
   });
 
-  it('rejects a reset token that has already been consumed (prHash changed)', async () => {
+  it('rejects a reset token that has already been consumed (passwordVersion bumped)', async () => {
     const forgot = await request(app).post('/api/auth/password/forgot').send({ email });
     const token = forgot.body.data.devResetToken;
     // first use succeeds
@@ -328,7 +328,7 @@ describe('Auth M1 — Sessions / device management', () => {
     const res = await request(app)
       .get('/api/auth/sessions')
       .set('Authorization', `Bearer ${firstAccess}`)
-      .send({ refreshToken: firstRefresh });
+      .set('X-Refresh-Token', firstRefresh);
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.data)).toBe(true);
     expect(res.body.data.length).toBeGreaterThanOrEqual(2);
@@ -341,7 +341,7 @@ describe('Auth M1 — Sessions / device management', () => {
     const list = await request(app)
       .get('/api/auth/sessions')
       .set('Authorization', `Bearer ${firstAccess}`)
-      .send({ refreshToken: firstRefresh });
+      .set('X-Refresh-Token', firstRefresh);
     const other = list.body.data.find((s: any) => !s.current);
     expect(other).toBeDefined();
 
@@ -353,7 +353,7 @@ describe('Auth M1 — Sessions / device management', () => {
     const after = await request(app)
       .get('/api/auth/sessions')
       .set('Authorization', `Bearer ${firstAccess}`)
-      .send({ refreshToken: firstRefresh });
+      .set('X-Refresh-Token', firstRefresh);
     expect(after.body.data.find((s: any) => s.fid === other.fid)).toBeUndefined();
   });
 
@@ -365,20 +365,20 @@ describe('Auth M1 — Sessions / device management', () => {
     const before = await request(app)
       .get('/api/auth/sessions')
       .set('Authorization', `Bearer ${firstAccess}`)
-      .send({ refreshToken: firstRefresh });
+      .set('X-Refresh-Token', firstRefresh);
     expect(before.body.data.length).toBeGreaterThanOrEqual(2);
 
     const del = await request(app)
       .delete('/api/auth/sessions')
       .set('Authorization', `Bearer ${firstAccess}`)
-      .send({ refreshToken: firstRefresh });
+      .set('X-Refresh-Token', firstRefresh);
     expect(del.status).toBe(200);
     expect(del.body.data.revoked).toBeGreaterThanOrEqual(1);
 
     const after = await request(app)
       .get('/api/auth/sessions')
       .set('Authorization', `Bearer ${firstAccess}`)
-      .send({ refreshToken: firstRefresh });
+      .set('X-Refresh-Token', firstRefresh);
     expect(after.body.data.length).toBe(1);
     expect(after.body.data[0].current).toBe(true);
   });

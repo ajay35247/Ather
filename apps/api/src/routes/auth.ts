@@ -3,7 +3,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { body, validationResult } from 'express-validator';
-import { createHash } from 'crypto';
 import { authenticate, AuthRequest, requireJwtSecret } from '../middleware/auth';
 import { createError } from '../middleware/errorHandler';
 import { limiters, makeLimiter } from '../middleware/rateLimits';
@@ -210,6 +209,10 @@ router.post(
       mfaSecret: null,
       mfaPendingSecret: null,
       googleSub: null,
+      // Incremented on every password change. Reset tickets capture this
+      // value so they self-invalidate after a successful reset (or after the
+      // user voluntarily changes their password from settings).
+      passwordVersion: 1,
       createdAt: now,
     };
     usersByEmail[email] = id;
@@ -398,6 +401,7 @@ router.post(
         mfaSecret: null,
         mfaPendingSecret: null,
         googleSub: identity.sub,
+        passwordVersion: 1,
         createdAt: new Date().toISOString(),
       };
       usersByEmail[identity.email] = id;
@@ -506,13 +510,11 @@ router.post(
 // ── Forgot / reset password ──────────────────────────────────────────────────
 //
 // Implemented with a signed, single-purpose reset ticket so we don't need a
-// separate persistent reset-tokens table. The ticket embeds (userId, prHash):
-//   prHash = sha256(currentPasswordHash) — when the password changes, all
-//   outstanding tickets are invalidated because their prHash no longer matches.
-
-function passwordHashFingerprint(passwordHash: string): string {
-  return createHash('sha256').update(passwordHash).digest('hex').slice(0, 32);
-}
+// separate persistent reset-tokens table. The ticket embeds (userId, pv):
+//   pv = user.passwordVersion at issue-time. We increment passwordVersion on
+//   every successful password change, which causes outstanding tickets (which
+//   carry the old version) to be rejected — so each ticket is effectively
+//   single-use and superseded by any password change in between.
 
 // POST /api/auth/password/forgot { email }
 router.post(
@@ -533,7 +535,7 @@ router.post(
       const user = users[userId];
       const secret = requireJwtSecret();
       const resetToken = jwt.sign(
-        { userId, typ: 'pwreset', prHash: passwordHashFingerprint(user.password) },
+        { userId, typ: 'pwreset', pv: user.passwordVersion ?? 1 },
         secret,
         { expiresIn: RESET_TICKET_TTL },
       );
@@ -562,7 +564,7 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) return next(createError(errors.array()[0].msg, 400));
 
-    let payload: { userId?: string; typ?: string; prHash?: string };
+    let payload: { userId?: string; typ?: string; pv?: number };
     try {
       const secret = requireJwtSecret();
       payload = jwt.verify(req.body.token, secret) as typeof payload;
@@ -575,11 +577,12 @@ router.post(
 
     const user = users[payload.userId];
     if (!user) return next(createError('Invalid reset token', 401));
-    if (payload.prHash !== passwordHashFingerprint(user.password)) {
+    if (typeof payload.pv !== 'number' || payload.pv !== (user.passwordVersion ?? 1)) {
       return next(createError('Reset token no longer valid', 401));
     }
 
     user.password = await bcrypt.hash(req.body.password, 12);
+    user.passwordVersion = (user.passwordVersion ?? 1) + 1;
     // Revoke every existing session so a stolen token can't outlive the reset.
     revokeAllFamiliesForUser(payload.userId);
 
@@ -719,10 +722,18 @@ function summarizeFamily(fam: RefreshFamily, currentFid?: string) {
   };
 }
 
-function currentFidFromBody(body: unknown): string | undefined {
-  if (!body || typeof body !== 'object') return undefined;
-  const rt = (body as Record<string, unknown>).refreshToken;
-  if (typeof rt !== 'string') return undefined;
+function currentFidFromReq(req: Request): string | undefined {
+  // Prefer header (proper REST: GET with a body is non-standard and stripped
+  // by some proxies). Body form is also accepted for backwards-compatibility.
+  const headerVal = req.headers['x-refresh-token'];
+  let rt: string | undefined;
+  if (typeof headerVal === 'string') rt = headerVal;
+  else if (Array.isArray(headerVal) && typeof headerVal[0] === 'string') rt = headerVal[0];
+  if (!rt && req.body && typeof req.body === 'object') {
+    const candidate = (req.body as Record<string, unknown>).refreshToken;
+    if (typeof candidate === 'string') rt = candidate;
+  }
+  if (!rt) return undefined;
   try {
     const secret = requireJwtSecret();
     const payload = jwt.verify(rt, secret) as { fid?: string; typ?: string };
@@ -735,7 +746,7 @@ function currentFidFromBody(body: unknown): string | undefined {
 
 // GET /api/auth/sessions
 router.get('/sessions', authenticate, (req: AuthRequest, res: Response) => {
-  const currentFid = currentFidFromBody(req.body);
+  const currentFid = currentFidFromReq(req);
   const mine = Object.values(families)
     .filter((f) => f.userId === req.userId && !f.revoked)
     .sort((a, b) => b.lastUsedAt - a.lastUsedAt)
@@ -755,7 +766,7 @@ router.delete('/sessions/:fid', authenticate, (req: AuthRequest, res: Response, 
 
 // DELETE /api/auth/sessions — revoke all sessions except (optionally) the current one
 router.delete('/sessions', authenticate, (req: AuthRequest, res: Response) => {
-  const currentFid = currentFidFromBody(req.body);
+  const currentFid = currentFidFromReq(req);
   let revoked = 0;
   for (const f of Object.values(families)) {
     if (f.userId === req.userId && !f.revoked && f.fid !== currentFid) {

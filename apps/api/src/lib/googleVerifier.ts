@@ -56,9 +56,17 @@ async function defaultVerifier(idToken: string): Promise<GoogleIdentity> {
   }
   const body = (await res.json()) as Record<string, unknown>;
 
-  // tokeninfo returns "aud" — verify it matches the configured client id.
+  // Audience binding. In production we *require* GOOGLE_CLIENT_ID to be set;
+  // otherwise an attacker could mint an ID token for a different OAuth client
+  // and replay it here, since tokeninfo will happily validate it. Outside
+  // production we allow the env var to be unset (e.g. local dev with the
+  // stubbed verifier injected by tests).
   const expectedAud = process.env.GOOGLE_CLIENT_ID;
-  if (expectedAud && body.aud !== expectedAud) {
+  if (!expectedAud) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('GOOGLE_CLIENT_ID must be set to verify Google sign-in tokens');
+    }
+  } else if (body.aud !== expectedAud) {
     throw new Error('Google token audience mismatch');
   }
   // tokeninfo returns expiry as seconds-since-epoch in "exp".
