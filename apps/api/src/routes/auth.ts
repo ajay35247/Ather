@@ -380,8 +380,9 @@ router.post(
       // username from the email local-part with a short uid suffix; collisions
       // are vanishingly unlikely and easy to rename later.
       const id = uuidv4();
-      const usernameBase = identity.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
-      const username = `${usernameBase.slice(0, 20) || 'user'}${id.slice(0, 6)}`;
+      const rawBase = identity.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+      const usernameBase = rawBase.length > 0 ? rawBase : 'user';
+      const username = `${usernameBase}${id.slice(0, 6)}`;
       const randomHash = await bcrypt.hash(uuidv4() + uuidv4(), 12);
       users[id] = {
         id,

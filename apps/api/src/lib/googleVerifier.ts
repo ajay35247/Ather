@@ -77,8 +77,11 @@ async function defaultVerifier(idToken: string): Promise<GoogleIdentity> {
   if (!body.email || !body.sub) {
     throw new Error('Google token missing required claims');
   }
+  // Google's tokeninfo endpoint returns `email_verified` as a JSON string
+  // ("true"/"false"), not a boolean. The stubbed verifier used in tests
+  // returns a real boolean; accept both shapes explicitly.
   const emailVerified =
-    body.email_verified === 'true' || body.email_verified === true;
+    body.email_verified === true || String(body.email_verified) === 'true';
 
   return {
     email: String(body.email).toLowerCase(),
