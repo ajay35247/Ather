@@ -43,16 +43,16 @@ jobs:
     name: GitHub Dependency Review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    # Soft-fail: the action only works when the repo-level "Dependency graph"
-    # setting is enabled (Settings → Code security → Dependency graph). When
-    # it is disabled the action exits with
+    # The action only works when the repo-level "Dependency graph" setting
+    # is enabled (Settings → Code security → Dependency graph). When it is
+    # disabled the action exits with
     #   "Dependency review is not supported on this repository"
-    # which would otherwise break every PR's CI. Keep the check in place so
-    # it works automatically as soon as Dependency graph is enabled, but
-    # don't block PRs while it is off.
-    continue-on-error: true
+    # We mark the action step itself as continue-on-error so the check
+    # reports green while Dependency graph is off, and starts gating PRs
+    # automatically as soon as the setting is enabled.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/dependency-review-action@v4
+        continue-on-error: true
         with:
           fail-on-severity: high
